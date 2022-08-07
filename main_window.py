@@ -26,6 +26,10 @@ class MainWindow(QMainWindow):
 
         self.information = {}
 
+        self.openSessAction = QAction(QtGui.QIcon('icons/document-open-symbolic.svg'),
+                                      'Open CSV session file', self)
+        self.openSessAction.triggered.connect(self.on_openSessAction)
+
         serDialogAction = QAction(QtGui.QIcon('icons/usb.svg'), '设备参数设置', self)
         serDialogAction.triggered.connect(self.onSerDialogAction)
 
@@ -34,10 +38,18 @@ class MainWindow(QMainWindow):
         self.liveRunAction.triggered.connect(self.on_liveRunAction)
         self.live_running = False
 
+        self.plotStoredDataAction = QAction(QtGui.QIcon('icons/appointment-new.svg'),
+                                            'Retrieve recorded data', self)
+        self.plotStoredDataAction.setEnabled(False)
+        self.plotStoredDataAction.triggered.connect(self.on_plotStoredDataAction)
+
         toolBar = self.addToolBar('Toolbar')
         toolBar.setMovable(False)
+        toolBar.addAction(self.openSessAction)
         toolBar.addAction(serDialogAction)
+
         toolBar.addAction(self.liveRunAction)
+        toolBar.addAction(self.plotStoredDataAction)
         toolBar.setIconSize(QtCore.QSize(32, 32))
 
         self.setWindowTitle('Singal Capture')
@@ -48,6 +60,7 @@ class MainWindow(QMainWindow):
 
         self.cw = MainWidget(self)
         self.setCentralWidget(self.cw)
+        self.pw = None
 
         self.show()
 
@@ -58,7 +71,6 @@ class MainWindow(QMainWindow):
     def on_liveRunAction(self):
 
         if not self.live_running:
-
             self.live_running = True
             self.liveThread = LiveThread(self.oxi, self)
             self.liveThread.start()
@@ -78,6 +90,30 @@ class MainWindow(QMainWindow):
             # self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-start-symbolic.svg'))
             self.liveRunAction.setEnabled(False)
             self.statusBar.showMessage('状态：连接关闭')
+
+    def on_openSessAction(self):
+        filename = QFileDialog.getOpenFileName(self)[0]
+
+        if filename:
+            self.oxi.open_csv(filename)
+            sessDialog = SessionDialog(self)
+            sessDialog.exec_()
+
+    def on_plotStoredDataAction(self):
+        self.csvThread = LiveThread(self.oxi, self)
+        self.csvThread.plotStoredData()
+
+    def openPlotWidget(self):
+        if self.pw is None:
+            self.pw = PlotWidget(self)
+            self.setCentralWidget(self.pw)
+
+        self.plotStoredDataAction.setEnabled(True)
+
+    # def on_plotStoredData(self):
+
+    # time.sleep(1)
+    # self.pw.plotStoredData()
 
 
 class MainWidget(QWidget):
@@ -170,6 +206,7 @@ class MainWidget(QWidget):
 
         self.w.pw = PlotWidget(self.w)
         self.w.setCentralWidget(self.w.pw)
+        self.w.pw.checkDevice()
 
 
 class PlotWidget(QWidget):
@@ -182,34 +219,37 @@ class PlotWidget(QWidget):
         self.layout = QtWidgets.QGridLayout()
         self.setLayout(self.layout)
 
-        self.checkDevicesButton = QtWidgets.QPushButton(self)
-        self.checkDevicesButton.setText('检查设备状态')
-        self.checkDevicesButton.setFixedSize(120, 35)
-        self.checkDevicesButton.clicked.connect(self.checkDevice)
+        # self.checkDevicesButton = QtWidgets.QPushButton(self)
+        # self.checkDevicesButton.setText('检查设备状态')
+        # self.checkDevicesButton.setFixedSize(120, 35)
+        # self.checkDevicesButton.clicked.connect(self.checkDevice)
 
         self.checkDeviceText = QtWidgets.QLabel(self)
 
-        pulse_plot = pg.PlotWidget(title='Pulse rate')
+        pulse_plot = pg.PlotWidget(background='w', )
         pulse_plot.setLabel('left', text='Pulse rate [bpm]')
         pulse_plot.setLabel('bottom', text='Time [s]')
 
-        self.pulse_curve = pulse_plot.plot(pen=pg.mkPen('w', width=2))
+        self.pulse_curve = pulse_plot.plot(pen=pg.mkPen('r', width=2))
 
-        pulse_plot_2 = pg.PlotWidget(title='Pulse rate')
-        pulse_plot_2.setLabel('left', text='Pulse rate [bpm]')
-        pulse_plot_2.setLabel('bottom', text='Time [s]')
+        spo2_plot = pg.PlotWidget(background='w')
+        spo2_plot.setLabel('left', text='Spo2 [%]')
+        spo2_plot.setLabel('bottom', text='Time [s]')
 
-        self.layout.addWidget(self.checkDevicesButton, 0, 0, 1, 1)
-        self.layout.addWidget(self.checkDeviceText, 0, 1)
-        self.layout.addWidget(pulse_plot, 1, 0, 1, 1)
-        self.layout.addWidget(pulse_plot_2, 1, 1, 1, 1)
+        self.spo2_curve = spo2_plot.plot(pen=pg.mkPen('r', width=2))
+
+        # self.layout.addWidget(self.checkDevicesButton, 0, 0, 1, 1)
+        self.layout.addWidget(self.checkDeviceText, 0, 0)
+        self.layout.addWidget(pulse_plot, 1, 0, 2, 2)
+        self.layout.addWidget(spo2_plot, 3, 0, 2, 2)
 
         self.w.statusBar = self.w.statusBar()
         self.w.statusBar.showMessage('状态：未开启')
+        self.w.resize(1000, 750)
 
     def checkDevice(self):
         if self.w.oxi.setup_device(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
-            self.checkDeviceText.setText("设备正常")
+            self.checkDeviceText.setText("血氧仪正常")
             self.w.liveRunAction.setEnabled(True)
         else:
             self.checkDeviceText.setText("设备连接异常")
@@ -286,6 +326,46 @@ class DeviceDialog(QDialog):
         }
 
         self.close()
+
+
+class SessionDialog(QDialog):
+    def __init__(self, w):
+        super().__init__()
+        self.w = w
+        self.lastStart = 0
+
+        self.setWindowTitle('Select stored data')
+        self.setWindowIcon(QtGui.QIcon('icons/pulse.svg'))
+
+        self.sessionTable = QTableWidget()
+        # Make the table uneditable
+        self.sessionTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.sessionTable.setRowCount(4)
+        self.sessionTable.setColumnCount(1)
+        self.sessionTable.setHorizontalHeaderLabels(['数据信息'])
+        self.sessionTable.setVerticalHeaderLabels(
+            ['数据存储', '用户', '时长', '数据点:'])
+        self.sessionTable.horizontalHeader().setStretchLastSection(True)
+
+        self.sessionTable.setItem(0, 0, QTableWidgetItem(w.oxi.sess_available))
+        self.sessionTable.setItem(1, 0, QTableWidgetItem('n/a from CSV file'))
+        self.sessionTable.setItem(2, 0, QTableWidgetItem(str(w.oxi.sess_duration)))
+        self.sessionTable.setItem(3, 0, QTableWidgetItem(str(len(w.oxi.stored_data))))
+
+        self.plotButton = QtWidgets.QPushButton(self)
+        self.plotButton.setText('绘图')
+        self.plotButton.clicked.connect(self.on_plotData)
+
+        self.verticalLayout = QtWidgets.QVBoxLayout(self)
+        self.verticalLayout.addWidget(self.sessionTable)
+        self.verticalLayout.addWidget(self.plotButton)
+        self.resize(600, 500)
+
+    def on_plotData(self):
+        # Reset plot data and rendered plot
+        self.close()
+        self.w.openPlotWidget()
+        # self.w.on_plotStoredData()
 
 
 if __name__ == '__main__':

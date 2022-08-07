@@ -152,6 +152,23 @@ class CMS50EW():
                               self.pydatetime.strftime('%d %B %Y, %H:%M:%S') + ' to '
                               + enddatetime.strftime('%d %B %Y, %H:%M:%S'))
 
+    def open_csv(self, filename):
+        """Opens and processes CSV session file."""
+        with open(filename, 'r') as file:
+            reader = csv.reader(file)
+            next(reader)  # Skip header
+            self.stored_data = []
+            start_time = 0
+            for row in reader:
+                if start_time == 0:
+                    start_time = float(row[1])
+                self.stored_data.append([float(row[1]) - start_time, row[2], int(row[3]), int(row[4])])
+        if (len(self.stored_data)) > 1:
+            self.sess_available = 'Yes'
+            self.sess_duration = datetime.timedelta(seconds=self.stored_data[-1][0] - self.stored_data[0][0])
+        else:
+            self.sess_available = 'No'
+
     def write_csv(self, timestamp):
         """Writes session data as CSV file."""
         filename = "data/spo2_" + timestamp + ".csv"
