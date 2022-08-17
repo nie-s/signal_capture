@@ -1,14 +1,19 @@
+import datetime
+import json
+import sys
+import time
+
+import cv2
+import pyqtgraph as pg
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QDialog, QTableWidget, QTableWidgetItem, QLineEdit, \
-    QLabel, QSpacerItem, QSizePolicy, QFrame, QAction, QProgressDialog, QFileDialog, QMessageBox
-import pyqtgraph as pg
-import time
-import datetime
-import sys
+    QLabel, QFrame, QAction, QFileDialog
 
-from cms50ew import CMS50EW
-from oxi_Thread import LiveThread
+from device.cms50ew import CMS50EW
+from device.real_time_video import Emotion
+from thread.emotion_thread import EmotionThread
+from thread.oxi_thread import LiveThread
 
 
 class MainWindow(QMainWindow):
@@ -16,13 +21,9 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.oxi = CMS50EW()
+        self.emotion = Emotion()
 
-        self.parameter = {
-            'spo2': {
-                'port': 'COM3',
-                'baudrate': 115200,
-            }
-        }
+        self.parameter = {}
 
         self.information = {}
 
@@ -76,6 +77,10 @@ class MainWindow(QMainWindow):
             self.liveThread.start()
             time.sleep(0.2)
 
+            self.emotionThread = EmotionThread(self.emotion, self)
+            self.emotionThread.start()
+            time.sleep(0.2)
+
             self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-stop-symbolic.svg'))
             self.liveRunAction.setEnabled(True)
             self.statusBar.showMessage('Status: Initiating live stream ...')
@@ -86,6 +91,10 @@ class MainWindow(QMainWindow):
             now = datetime.datetime.now()
             string = str(now.strftime("%Y-%m-%d-%H-%M-%S"))
             self.liveThread.oxi.write_csv(string)
+
+            self.emotionThread.out.release()
+            self.emotionThread.camera.release()
+            cv2.destroyAllWindows()
 
             # self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-start-symbolic.svg'))
             self.liveRunAction.setEnabled(False)
@@ -238,21 +247,37 @@ class PlotWidget(QWidget):
 
         self.spo2_curve = spo2_plot.plot(pen=pg.mkPen('r', width=2))
 
-        # self.layout.addWidget(self.checkDevicesButton, 0, 0, 1, 1)
+        tmp_plot = pg.PlotWidget(background='w')
+
+        self.img, self.vb = self.create_video_player()
+
         self.layout.addWidget(self.checkDeviceText, 0, 0)
-        self.layout.addWidget(pulse_plot, 1, 0, 2, 2)
-        self.layout.addWidget(spo2_plot, 3, 0, 2, 2)
+        self.layout.addWidget(pulse_plot, 1, 0, 2, 3)
+        self.layout.addWidget(spo2_plot, 3, 0, 2, 3)
+        self.layout.addWidget(tmp_plot, 5, 0, 2, 3)
+        self.layout.addWidget(self.vb, 1, 3, 6, 1)
 
         self.w.statusBar = self.w.statusBar()
         self.w.statusBar.showMessage('状态：未开启')
-        self.w.resize(1000, 750)
+        self.w.resize(1200, 750)
 
     def checkDevice(self):
-        if self.w.oxi.setup_device(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
-            self.checkDeviceText.setText("血氧仪正常")
-            self.w.liveRunAction.setEnabled(True)
-        else:
-            self.checkDeviceText.setText("设备连接异常")
+        # if self.w.oxi.setup_dcevice(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
+        #     self.checkDeviceText.setText("血氧仪正常")
+        #     self.w.liveRunAction.setEnabled(True)
+        # else:
+        #     self.checkDeviceText.setText("设备连接异常")
+
+        self.w.liveRunAction.setEnabled(True)
+
+    def create_video_player(self):
+        frame = cv2.imread("icons/placeholder.png")
+        vb = pg.GraphicsView()
+        frame, _ = pg.makeARGB(frame, None, None, None, False)
+        img = pg.ImageItem(frame, axisOrder='row-major')
+        img.show()
+        vb.addItem(img)
+        return img, vb
 
 
 class DeviceDialog(QDialog):
@@ -262,6 +287,9 @@ class DeviceDialog(QDialog):
         self.w = mainWindow
         self.setWindowIcon(QtGui.QIcon('icons/pulse.svg'))
         self.setWindowTitle(str('设备参数设置'))
+
+        with open("para.json", 'r', encoding='UTF-8') as f:
+            self.w.parameter = json.load(f)
 
         self.layout = QtWidgets.QGridLayout()
         self.layout.setSpacing(20)
@@ -288,9 +316,23 @@ class DeviceDialog(QDialog):
         self.horizontalSpacer = QFrame()
         self.horizontalSpacer.setFrameShape(QFrame.HLine)
 
-        self.eyeLabel = QLabel(self)
-        self.eyeLabel.setText(str(' 眼动仪参数'))
-        self.eyeLabel.setStyleSheet('font-weight:bold;margin-top:10px;')
+        self.eggLabel = QLabel(self)
+        self.eggLabel.setText(str(' 脑电仪参数'))
+        self.eggLabel.setStyleSheet('font-weight:bold;margin-top:10px;')
+
+        self.eggPortTextBoxLabel = QLabel(self)
+        self.eggPortTextBoxLabel.setText('  端口：')
+        self.eggPortTextBoxLabel.setFixedSize(90, 35)
+        self.eggPortTextBox = QLineEdit(self)
+        self.eggPortTextBox.setText(mainWindow.parameter['egg']['port'])
+        self.eggPortTextBox.setFixedSize(180, 35)
+
+        self.eggBaudTextBoxLabel = QLabel(self)
+        self.eggBaudTextBoxLabel.setText('  波特率：')
+        self.eggBaudTextBoxLabel.setFixedSize(90, 35)
+        self.eggBaudTextBox = QLineEdit(self)
+        self.eggBaudTextBox.setText(str(mainWindow.parameter['egg']['baudrate']))
+        self.eggBaudTextBox.setFixedSize(180, 35)
 
         self.confirmButton = QtWidgets.QPushButton(self)
         self.confirmButton.setText("确定")
@@ -307,7 +349,11 @@ class DeviceDialog(QDialog):
         self.layout.addWidget(self.spo2BaudTextBoxLabel, 2, 0)
         self.layout.addWidget(self.spo2BaudTextBox, 2, 1)
         self.layout.addWidget(self.horizontalSpacer, 3, 0, 1, 3)
-        self.layout.addWidget(self.eyeLabel, 4, 0)
+        self.layout.addWidget(self.eggLabel, 4, 0)
+        self.layout.addWidget(self.eggPortTextBoxLabel, 5, 0)
+        self.layout.addWidget(self.eggPortTextBox, 5, 1)
+        self.layout.addWidget(self.eggBaudTextBoxLabel, 6, 0)
+        self.layout.addWidget(self.eggBaudTextBox, 6, 1)
 
         self.setLayout(self.layout)
         self.adjustSize()
@@ -319,11 +365,18 @@ class DeviceDialog(QDialog):
             return
 
         self.w.parameter = {
-            'spo2': {
-                'port': self.spo2PortTextBox.text(),
-                'baudrate': int(self.spo2BaudTextBox.text()),
+            "spo2": {
+                "port": self.spo2PortTextBox.text(),
+                "baudrate": int(self.spo2BaudTextBox.text()),
+            },
+            "egg": {
+                "port": self.eggPortTextBox.text(),
+                "baudrate": int(self.eggBaudTextBox.text()),
             }
         }
+
+        with open("para.json", "w") as f:
+            f.write(json.dumps(self.w.parameter, ensure_ascii=False, indent=4, separators=(',', ':')))
 
         self.close()
 

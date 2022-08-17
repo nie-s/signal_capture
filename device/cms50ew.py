@@ -1,15 +1,12 @@
 import time
-
 import serial
-import bluetooth
-import glob
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
 import pandas as pd
 
-from hrv_Calculator import HRV_Calculator
+from device.hrv_calculator import HRV_Calculator
 
 
 class CMS50EW():
@@ -176,7 +173,7 @@ class CMS50EW():
         with open(filename, 'w', newline='') as f:
             datawriter = csv.writer(f, delimiter=',')
             datawriter.writerow(
-                ['Time', 'Timestamp', 'Pulse rate [bpm]', 'spo2', 'ppg', 'strength', 'IBI', 'SDNN', 'SDSD', 'RMSSD',
+                ['Time', 'Timestamp', ' Pulse rate [bpm]', 'spo2', 'ppg', 'strength', 'IBI', 'SDNN', 'SDSD', 'RMSSD',
                  'pNN20', 'pNN50'])
             datawriter.writerows(self.stored_data)
 
