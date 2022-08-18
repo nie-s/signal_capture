@@ -76,6 +76,11 @@ class MainWindow(QMainWindow):
     def on_liveRunAction(self):
 
         if not self.live_running:
+            now = datetime.datetime.now()
+            self.start = str(now.strftime("%Y-%m-%d-%H-%M-%S"))
+            self.folder = 'data/' + self.information['subjectId'] + '-' + self.information[
+                'subjectName'] + "/" + self.start
+
             self.live_running = True
             self.liveThread = LiveThread(self.oxi, self)
             self.liveThread.start()
@@ -92,29 +97,17 @@ class MainWindow(QMainWindow):
             self.live_running = False
             time.sleep(0.2)  # Give thread the chance to end itself
 
-            now = datetime.datetime.now()
-            string = str(now.strftime("%Y-%m-%d-%H-%M-%S"))
-            dir = 'data/' + self.information['subjectId'] + '-' + self.information['subjectName'] + "/" + string
+            self.write()
 
-            os.makedirs(dir)
-
-            self.liveThread.oxi.write_csv(dir, string)
-            self.emotionThread.emotion.write_csv(dir, string)
-            self.mergeData(dir, string)
-
-            with open(dir + '/info.json', "w") as f:
-                f.write(json.dumps(self.information, ensure_ascii=False, indent=4, separators=(',', ':')))
-
-            self.emotionThread.out.release()
             self.emotionThread.camera.release()
+            self.emotionThread.out.release()
+            cv2.destroyAllWindows()
 
             frame = cv2.imread("icons/placeholder.png")
             frame, _ = pg.makeARGB(frame, None, None, None, False)
             self.img = pg.ImageItem(frame, axisOrder='row-major')
             self.img.show()
             self.pw.ui.vb.addItem(self.img)
-
-            cv2.destroyAllWindows()
 
             # self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-start-symbolic.svg'))
             self.liveRunAction.setEnabled(False)
@@ -144,10 +137,21 @@ class MainWindow(QMainWindow):
     # time.sleep(1)
     # self.pw.plotStoredData()
 
-    def mergeData(self, dir, time):
+    def write(self):
+        if not os.path.isdir(self.folder):
+            os.makedirs(self.folder)
+
+        self.liveThread.oxi.write_csv(self.folder, self.start)
+        self.emotionThread.emotion.write_csv(self.folder, self.start)
+        self.mergeData(self.folder)
+
+        with open(self.folder + '/info.json', "w", encoding="GBK") as f:
+            f.write(json.dumps(self.information, ensure_ascii=False, indent=4, separators=(',', ':')))
+
+    def mergeData(self, folder):
         spo2_data = []
 
-        with open(dir + '/spo2.csv') as csvfile:
+        with open(folder + '/spo2.csv') as csvfile:
             csv_reader = csv.reader(csvfile)
             total_header = next(csv_reader)
 
@@ -155,7 +159,7 @@ class MainWindow(QMainWindow):
                 spo2_data.append(row)
 
         emotion_data = []
-        with open(dir + '/emotion.csv') as csvfile:
+        with open(folder + '/emotion.csv') as csvfile:
             csv_reader = csv.reader(csvfile)
             header = next(csv_reader)
             total_header.extend(header[2:])
@@ -179,7 +183,7 @@ class MainWindow(QMainWindow):
 
             spo2_data[last].extend(data[2:])
 
-        with open(dir + '/merged.csv', 'w', newline='') as f:
+        with open(folder + '/merged.csv', 'w', newline='') as f:
             datawriter = csv.writer(f, delimiter=',')
             datawriter.writerow(total_header)
             datawriter.writerows(spo2_data)

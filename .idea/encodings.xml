@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/data/1-name/2022-08-18-17-25-44/actions.csv" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/data/1-name/2022-08-18-17-29-21/actions.csv" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/data/1-name/2022-08-18-19-48-34/actions.csv" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/data/1-test/2022-08-18-16-33-48/timeInfo.txt" charset="GBK" />
     <file url="file://$PROJECT_DIR$/timeInfo.txt" charset="GBK" />
   </component>
 </project>

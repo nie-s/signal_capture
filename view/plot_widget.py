@@ -3,7 +3,9 @@ import pyqtgraph as pg
 from PyQt5 import uic
 from PyQt5.QtChart import QBarSet, QBarSeries, QChart, QBarCategoryAxis, QValueAxis
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QDesktopWidget
+
+from view.video_widget import ViewController
 
 
 class PlotWidget(QWidget):
@@ -20,6 +22,20 @@ class PlotWidget(QWidget):
         self.ui.spo2_plot.setLabel('left', text='Spo2 [%]')
         self.ui.spo2_plot.setLabel('bottom', text='Time [s]')
         self.spo2_curve = self.ui.spo2_plot.plot(pen=pg.mkPen('r', width=2))
+
+        self.ui.bar_chart.setChart(self.createBarChart())
+        self.create_video_player()
+        self.ui.video_button.clicked.connect(self.openVideoWindow)
+
+        self.w.statusBar = self.w.statusBar()
+        self.w.statusBar.showMessage('状态：未开启')
+        self.w.resize(1500, 800)
+        screen = QDesktopWidget().screenGeometry()
+        size = self.w.geometry()
+        self.w.move((screen.width() - size.width()) / 2,
+                    (screen.height() - size.height()) / 2)
+
+    def createBarChart(self):
 
         self.barSet = QBarSet('data')
         self.barSet.append([0, 0, 0, 0, 0, 0, 0])
@@ -43,13 +59,7 @@ class PlotWidget(QWidget):
         self.barSeries.attachAxis(axisY)
 
         chart.legend().setVisible(False)
-        self.ui.bar_chart.setChart(chart)
-
-        self.create_video_player()
-
-        self.w.statusBar = self.w.statusBar()
-        self.w.statusBar.showMessage('状态：未开启')
-        self.w.resize(1280, 800)
+        return chart
 
     def checkDevice(self):
         if self.w.oxi.setup_device(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
@@ -62,8 +72,12 @@ class PlotWidget(QWidget):
 
     def create_video_player(self):
         # frame = cv2.imread("../icons/placeholder.png")
-        frame = cv2.imread("D:/buaa/l/intern/psy/code/spo2/signal_capture/view/placeholder.png")
+        frame = cv2.imread("view/placeholder.png")
         frame, _ = pg.makeARGB(frame, None, None, None, False)
         self.img = pg.ImageItem(frame, axisOrder='row-major')
         self.img.show()
         self.ui.vb.addItem(self.img)
+
+    def openVideoWindow(self):
+        self.view = ViewController(self.w)
+        self.view.loadLoginView()

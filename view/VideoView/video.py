@@ -1,3 +1,6 @@
+import csv
+import datetime
+import os
 import time
 
 from PyQt5 import QtWidgets
@@ -11,22 +14,33 @@ from view.VideoView.simple_videoUI import Ui_Form
 class MainWinController(QWidget, Ui_Form):
     endSignal = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, w, parent=None):
         super(MainWinController, self).__init__(parent)
+        self.w = w
         self.setupUi(self)
         # 播放器
         self.player = QMediaPlayer()
         self.player.setVideoOutput(self.wgt_player)
         # self.player.setMedia(QMediaContent(QFileDialog.getOpenFileUrl()[0]))  # 选取视频文件
-        self.player.setMedia(QMediaContent(QUrl.fromLocalFile("10s静音.mp4")))
+
+        self.player.setMedia(QMediaContent(QUrl.fromLocalFile("view/10s静音.mp4")))
+
         self.player.mediaStatusChanged.connect(self.recordTimeInfo)
 
     def play(self):
         self.player.play()
-        t = time.time()
+
+        if not os.path.isdir(self.w.folder):
+            os.makedirs(self.w.folder)
+
+        now = datetime.datetime.now()
+        nowtimestamp = time.time()
+        nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+
         print("记录开始时间")
-        with open('timeInfo.txt', 'w') as f:
-            f.write("视频开始时间： " + str(t) + "\n")
+        with open(self.w.folder + '/actions.csv', 'a') as f:
+            datawriter = csv.writer(f, delimiter=',')
+            datawriter.writerow([nowtime, nowtimestamp, '点击开始'])
 
         # 在类中定义一个定时器,并在构造函数中设置启动及其信号和槽
         self.timer1 = QTimer(self)
@@ -51,9 +65,13 @@ class MainWinController(QWidget, Ui_Form):
     def recordTimeInfo(self):
         if self.player.mediaStatus() == 7:
             print("记录结束时间")
-            t = time.time()
-            with open('timeInfo.txt', 'a') as f:
-                f.write("视频结束时间： " + str(t) + "\n")
+            now = datetime.datetime.now()
+            nowtimestamp = time.time()
+            nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+
+            with open(self.w.folder + '/actions.csv', 'a') as f:
+                datawriter = csv.writer(f, delimiter=',')
+                datawriter.writerow([nowtime, nowtimestamp, '视频结束'])
 
     def popQues1(self):
         self.quesView = Questionnaire()

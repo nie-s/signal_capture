@@ -167,9 +167,9 @@ class CMS50EW():
         else:
             self.sess_available = 'No'
 
-    def write_csv(self, dir, timestamp):
+    def write_csv(self, folder, timestamp):
         """Writes session data as CSV file."""
-        filename = dir + "/spo2.csv"
+        filename = folder + "/spo2.csv"
 
         with open(filename, 'w', newline='') as f:
             datawriter = csv.writer(f, delimiter=',')

@@ -1,5 +1,6 @@
 import csv
 import datetime
+import os
 import time
 
 import cv2
@@ -18,21 +19,20 @@ class Emotion():
         self.pw = None
         self.emotion_data = []
 
-    def setup_webcam(self, pw, index):
-        self.pw = pw
-        camera = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+    def setup_webcam(self, w, index):
+        self.pw = w.pw
+        camera = cv2.VideoCapture(index)
 
-        width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fps = camera.get(cv2.CAP_PROP_FPS)
+        if not os.path.isdir(w.folder):
+            os.makedirs(w.folder)
 
-        self.outVideo = cv2.VideoWriter('out.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
-        # self.outVideo = cv2.VideoWriter('video.avi', cv2.VideoWriter_fourcc('P', 'I', 'M', 'I'), fps, (width, height))
+        self.fps = camera.get(cv2.CAP_PROP_FPS)
+        self.outVideo = cv2.VideoWriter(w.folder + '/out.avi', cv2.VideoWriter_fourcc(*'mp4v'), self.fps, (448, 336))
 
         return camera, self.outVideo
 
-    def update(self, frame):
-        frame = imutils.resize(frame, width=450)
+    def update(self, frame_read):
+        frame = imutils.resize(frame_read, width=448, height=336)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         frameClone = frame.copy()
@@ -55,17 +55,17 @@ class Emotion():
 
         preds = preds.tolist()
         data = [nowtime, nowtimestamp] + preds
-
         self.emotion_data.append(data)
         self.outVideo.write(frameClone)
+
         frameClone, _ = pg.makeARGB(frameClone, None, None, None, False)
         self.pw.img.setImage(frameClone)
         self.pw.vb.viewport().update()
 
         return preds
 
-    def write_csv(self, dir, timestamp):
-        filename = dir + "/emotion.csv"
+    def write_csv(self, folder, timestamp):
+        filename = folder + "/emotion.csv"
         with open(filename, 'w', newline='') as f:
             datawriter = csv.writer(f, delimiter=',')
             datawriter.writerow(

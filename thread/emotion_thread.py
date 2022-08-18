@@ -9,20 +9,20 @@ class EmotionThread(QtCore.QThread):
         self.index = index
 
     def run(self):
-        self.camera, self.out = self.emotion.setup_webcam(self.w.pw, self.index)
+        self.camera, self.out = self.emotion.setup_webcam(self.w, self.index)
 
         while self.w.live_running:
             try:
                 self.update_plot()
             except (TypeError):
                 if self.w.live_running:
-                    print('Something happened.\nRestarting live feed ...')
+                    self.camera, self.out = self.emotion.setup_webcam(self.w, self.index)
+                    print('Something happened in emotion_thread')
 
     def update_plot(self):
         while self.w.live_running:
-            _, frame = self.camera.read()
+            frame = self.camera.read()[1]
             data = self.w.emotion.update(frame)
             # print(data)
-            self.w.pw.barSet.remove(0,7)
+            self.w.pw.barSet.remove(0, 7)
             self.w.pw.barSet.append(data)
-

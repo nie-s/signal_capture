@@ -3,7 +3,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QComboBox
 
 from view.plot_widget import PlotWidget
-from view.video_widget import ViewController
 
 
 class MainWidget(QWidget):
@@ -81,7 +80,12 @@ class MainWidget(QWidget):
     def confirm(self):
         self.subjectName = self.nameTextBox.text()
         self.subjectAge = self.ageTextBox.text()
-        self.subjectSex = self.sexTextBox.currentText()
+
+        if self.sexTextBox.currentIndex() == 0:
+            self.subjectSex = "女"
+        else:
+            self.subjectSex = "男"
+
         self.subjectId = self.idTextBox.text()
 
         if self.subjectName == "" or self.subjectId == "" or self.subjectSex == "" or self.subjectAge == "":
@@ -98,7 +102,3 @@ class MainWidget(QWidget):
         self.w.pw = PlotWidget(self.w)
         self.w.setCentralWidget(self.w.pw)
         self.w.pw.checkDevice()
-
-        self.view = ViewController()
-        self.view.loadLoginView()
-

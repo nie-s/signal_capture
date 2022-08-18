@@ -3,10 +3,8 @@ import numpy as np
 from keras.models import load_model
 from keras.utils import image_utils
 
-# detection_model_path = 'haarcascade_files/haarcascade_frontalface_default.xml'
-# emotion_model_path = './models/_mini_XCEPTION.102-0.66.hdf5'
-detection_model_path = 'D:/buaa/l/intern/psy/code/spo2/signal_capture/device/haarcascade_files/haarcascade_frontalface_default.xml'
-emotion_model_path = 'D:/buaa/l/intern/psy/code/spo2/signal_capture/device/models/_mini_XCEPTION.102-0.66.hdf5'
+detection_model_path = 'device/haarcascade_files/haarcascade_frontalface_default.xml'
+emotion_model_path = 'device/models/_mini_XCEPTION.102-0.66.hdf5'
 
 face_detection = cv2.CascadeClassifier(detection_model_path)
 emotion_classifier = load_model(emotion_model_path, compile=False)
