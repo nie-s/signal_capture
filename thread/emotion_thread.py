@@ -2,13 +2,14 @@ from PyQt5 import QtCore
 
 
 class EmotionThread(QtCore.QThread):
-    def __init__(self, emotion, w, ):
+    def __init__(self, emotion, w, index):
         super().__init__()
         self.emotion = emotion
         self.w = w
+        self.index = index
 
     def run(self):
-        self.camera, self.out = self.emotion.setup_webcam(self.w.pw)
+        self.camera, self.out = self.emotion.setup_webcam(self.w.pw, self.index)
 
         while self.w.live_running:
             try:
@@ -20,4 +21,8 @@ class EmotionThread(QtCore.QThread):
     def update_plot(self):
         while self.w.live_running:
             _, frame = self.camera.read()
-            self.w.emotion.update(frame)
+            data = self.w.emotion.update(frame)
+            # print(data)
+            self.w.pw.barSet.remove(0,7)
+            self.w.pw.barSet.append(data)
+

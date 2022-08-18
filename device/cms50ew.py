@@ -1,10 +1,11 @@
-import time
-import serial
-import datetime
-import numpy as np
-import matplotlib.pyplot as plt
 import csv
+import datetime
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import serial
 
 from device.hrv_calculator import HRV_Calculator
 
@@ -166,9 +167,9 @@ class CMS50EW():
         else:
             self.sess_available = 'No'
 
-    def write_csv(self, timestamp):
+    def write_csv(self, dir, timestamp):
         """Writes session data as CSV file."""
-        filename = "data/spo2_" + timestamp + ".csv"
+        filename = dir + "/spo2.csv"
 
         with open(filename, 'w', newline='') as f:
             datawriter = csv.writer(f, delimiter=',')

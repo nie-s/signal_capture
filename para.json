@@ -6,5 +6,8 @@
     "egg":{
         "port":"COM5",
         "baudrate":57600
+    },
+    "camera":{
+        "index":0
     }
 }

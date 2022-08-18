@@ -1,4 +1,9 @@
+import csv
+import datetime
+import time
+
 import cv2
+import imutils
 import pyqtgraph as pg
 
 from device import emtion_reg
@@ -11,24 +16,23 @@ class Emotion():
     def __init__(self):
         self.frame = []
         self.pw = None
+        self.emotion_data = []
 
-    def setup_webcam(self, pw):
+    def setup_webcam(self, pw, index):
         self.pw = pw
-        camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        camera = cv2.VideoCapture(index, cv2.CAP_DSHOW)
 
         width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = camera.get(cv2.CAP_PROP_FPS)
 
-        # self.outVideo = cv2.VideoWriter('out.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fp, (width, height))
-        # self.outVideo = cv2.VideoWriter('out.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps,
-        #                                 (int(camera.get(3)), int(camera.get(4))))
-        self.outVideo = cv2.VideoWriter('video.avi', cv2.VideoWriter_fourcc('P', 'I', 'M', 'I'), fps, (width, height))
+        self.outVideo = cv2.VideoWriter('out.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+        # self.outVideo = cv2.VideoWriter('video.avi', cv2.VideoWriter_fourcc('P', 'I', 'M', 'I'), fps, (width, height))
 
         return camera, self.outVideo
 
     def update(self, frame):
-        # frame = imutils.resize(frame, width=500)
+        frame = imutils.resize(frame, width=450)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         frameClone = frame.copy()
@@ -45,7 +49,25 @@ class Emotion():
             cv2.rectangle(frameClone, (fX, fY), (fX + fW, fY + fH),
                           (0, 0, 255), 2)
 
+        now = datetime.datetime.now()
+        nowtimestamp = time.time()
+        nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+
+        preds = preds.tolist()
+        data = [nowtime, nowtimestamp] + preds
+
+        self.emotion_data.append(data)
         self.outVideo.write(frameClone)
         frameClone, _ = pg.makeARGB(frameClone, None, None, None, False)
         self.pw.img.setImage(frameClone)
         self.pw.vb.viewport().update()
+
+        return preds
+
+    def write_csv(self, dir, timestamp):
+        filename = dir + "/emotion.csv"
+        with open(filename, 'w', newline='') as f:
+            datawriter = csv.writer(f, delimiter=',')
+            datawriter.writerow(
+                ['Time', 'Timestamp', "angry", "disgust", "scared", "happy", "sad", "surprised", "neutral"])
+            datawriter.writerows(self.emotion_data)

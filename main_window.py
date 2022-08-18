@@ -1,19 +1,22 @@
+import csv
 import datetime
 import json
+import os
 import sys
 import time
 
 import cv2
 import pyqtgraph as pg
-from PyQt5 import QtGui, QtCore, QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QDialog, QTableWidget, QTableWidgetItem, QLineEdit, \
-    QLabel, QFrame, QAction, QFileDialog
+from PyQt5 import QtGui, QtCore
+from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QFileDialog
 
 from device.cms50ew import CMS50EW
 from device.real_time_video import Emotion
+from session_dialog import SessionDialog
 from thread.emotion_thread import EmotionThread
 from thread.oxi_thread import LiveThread
+from view.device_dialog import DeviceDialog
+from view.main_widget import MainWidget
 
 
 class MainWindow(QMainWindow):
@@ -23,7 +26,8 @@ class MainWindow(QMainWindow):
         self.oxi = CMS50EW()
         self.emotion = Emotion()
 
-        self.parameter = {}
+        with open("para.json", 'r', encoding='UTF-8') as f:
+            self.parameter = json.load(f)
 
         self.information = {}
 
@@ -77,7 +81,7 @@ class MainWindow(QMainWindow):
             self.liveThread.start()
             time.sleep(0.2)
 
-            self.emotionThread = EmotionThread(self.emotion, self)
+            self.emotionThread = EmotionThread(self.emotion, self, self.parameter['camera']['index'])
             self.emotionThread.start()
             time.sleep(0.2)
 
@@ -90,10 +94,26 @@ class MainWindow(QMainWindow):
 
             now = datetime.datetime.now()
             string = str(now.strftime("%Y-%m-%d-%H-%M-%S"))
-            self.liveThread.oxi.write_csv(string)
+            dir = 'data/' + self.information['subjectId'] + '-' + self.information['subjectName'] + "/" + string
+
+            os.makedirs(dir)
+
+            self.liveThread.oxi.write_csv(dir, string)
+            self.emotionThread.emotion.write_csv(dir, string)
+            self.mergeData(dir, string)
+
+            with open(dir + '/info.json', "w") as f:
+                f.write(json.dumps(self.information, ensure_ascii=False, indent=4, separators=(',', ':')))
 
             self.emotionThread.out.release()
             self.emotionThread.camera.release()
+
+            frame = cv2.imread("icons/placeholder.png")
+            frame, _ = pg.makeARGB(frame, None, None, None, False)
+            self.img = pg.ImageItem(frame, axisOrder='row-major')
+            self.img.show()
+            self.pw.ui.vb.addItem(self.img)
+
             cv2.destroyAllWindows()
 
             # self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-start-symbolic.svg'))
@@ -114,7 +134,7 @@ class MainWindow(QMainWindow):
 
     def openPlotWidget(self):
         if self.pw is None:
-            self.pw = PlotWidget(self)
+            self.pw = pg.PlotWidget(self)
             self.setCentralWidget(self.pw)
 
         self.plotStoredDataAction.setEnabled(True)
@@ -124,301 +144,45 @@ class MainWindow(QMainWindow):
     # time.sleep(1)
     # self.pw.plotStoredData()
 
-
-class MainWidget(QWidget):
-    def __init__(self, mainWindow):
-        super().__init__()
-
-        self.w = mainWindow
-
-        # Use a grid layout
-        self.layout = QtWidgets.QGridLayout()
-        self.layout.setAlignment(Qt.AlignHCenter)
-        self.layout.setSpacing(20)
-
-        self.setLayout(self.layout)
-
-        self.spaceHolderLeft = QtWidgets.QLabel('')
-        self.spaceHolderRight = QtWidgets.QLabel('')
-        self.spaceHolderRight.setFixedSize(265, 35)
-
-        self.nameTextBoxLabel = QLabel(self)
-        self.nameTextBoxLabel.setText(str('姓名:'))
-        self.nameTextBoxLabel.setFixedSize(50, 35)
-
-        self.nameTextBox = QLineEdit(self)
-        self.nameTextBox.setFixedSize(180, 35)
-
-        self.ageTextBoxLabel = QLabel(self)
-        self.ageTextBoxLabel.setText(str('年龄:'))
-        self.ageTextBoxLabel.setFixedSize(50, 35)
-
-        self.ageTextBox = QLineEdit(self)
-        self.ageTextBox.setFixedSize(180, 35)
-
-        self.sexTextBoxLabel = QLabel(self)
-        self.sexTextBoxLabel.setText(str('性别:'))
-        self.sexTextBoxLabel.setFixedSize(50, 35)
-
-        self.sexTextBox = QLineEdit(self)
-        self.sexTextBox.setFixedSize(180, 35)
-
-        self.idTextBoxLabel = QLabel(self)
-        self.idTextBoxLabel.setText(str('编号:'))
-        self.idTextBoxLabel.setFixedSize(50, 35)
-
-        self.idTextBox = QLineEdit(self)
-        self.idTextBox.setFixedSize(180, 35)
-
-        self.warningLabel = QLabel(self)
-        self.warningLabel.setStyleSheet('color:red')
-        self.warningLabel.setFixedSize(180, 35)
-
-        self.confirmButton = QtWidgets.QPushButton(self)
-        self.confirmButton.setText('确定')
-        self.confirmButton.setGeometry(350, 410, 100, 40)
-        self.confirmButton.clicked.connect(self.confirm)
-
-        self.layout.addWidget(self.spaceHolderLeft, 0, 0)
-        self.layout.addWidget(self.spaceHolderRight, 0, 3)
-
-        self.layout.addWidget(self.nameTextBoxLabel, 0, 1)
-        self.layout.addWidget(self.nameTextBox, 0, 2)
-
-        self.layout.addWidget(self.ageTextBoxLabel, 1, 1)
-        self.layout.addWidget(self.ageTextBox, 1, 2)
-
-        self.layout.addWidget(self.sexTextBoxLabel, 2, 1)
-        self.layout.addWidget(self.sexTextBox, 2, 2)
-
-        self.layout.addWidget(self.idTextBoxLabel, 3, 1)
-        self.layout.addWidget(self.idTextBox, 3, 2)
-
-        self.layout.addWidget(self.warningLabel, 4, 2)
-
-    def confirm(self):
-        self.subjectName = self.nameTextBox.text()
-        self.subjectAge = self.ageTextBox.text()
-        self.subjectSex = self.sexTextBox.text()
-        self.subjectId = self.idTextBox.text()
-
-        if self.subjectName == "" or self.subjectId == "" or self.subjectSex == "" or self.subjectAge == "":
-            self.warningLabel.setText("请输入完整信息！")
-            return
-
-        self.w.information = {
-            'subjectName': self.subjectName,
-            'subjectAge': self.subjectAge,
-            'subjectSex': self.subjectSex,
-            'subjectId': self.subjectId,
-        }
-
-        self.w.pw = PlotWidget(self.w)
-        self.w.setCentralWidget(self.w.pw)
-        self.w.pw.checkDevice()
-
-
-class PlotWidget(QWidget):
-    def __init__(self, mainWindow):
-        super().__init__()
-
-        self.w = mainWindow
-
-        # Use a grid layout
-        self.layout = QtWidgets.QGridLayout()
-        self.setLayout(self.layout)
-
-        # self.checkDevicesButton = QtWidgets.QPushButton(self)
-        # self.checkDevicesButton.setText('检查设备状态')
-        # self.checkDevicesButton.setFixedSize(120, 35)
-        # self.checkDevicesButton.clicked.connect(self.checkDevice)
-
-        self.checkDeviceText = QtWidgets.QLabel(self)
-
-        pulse_plot = pg.PlotWidget(background='w', )
-        pulse_plot.setLabel('left', text='Pulse rate [bpm]')
-        pulse_plot.setLabel('bottom', text='Time [s]')
-
-        self.pulse_curve = pulse_plot.plot(pen=pg.mkPen('r', width=2))
-
-        spo2_plot = pg.PlotWidget(background='w')
-        spo2_plot.setLabel('left', text='Spo2 [%]')
-        spo2_plot.setLabel('bottom', text='Time [s]')
-
-        self.spo2_curve = spo2_plot.plot(pen=pg.mkPen('r', width=2))
-
-        tmp_plot = pg.PlotWidget(background='w')
-
-        self.img, self.vb = self.create_video_player()
-
-        self.layout.addWidget(self.checkDeviceText, 0, 0)
-        self.layout.addWidget(pulse_plot, 1, 0, 2, 3)
-        self.layout.addWidget(spo2_plot, 3, 0, 2, 3)
-        self.layout.addWidget(tmp_plot, 5, 0, 2, 3)
-        self.layout.addWidget(self.vb, 1, 3, 6, 1)
-
-        self.w.statusBar = self.w.statusBar()
-        self.w.statusBar.showMessage('状态：未开启')
-        self.w.resize(1200, 750)
-
-    def checkDevice(self):
-        # if self.w.oxi.setup_dcevice(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
-        #     self.checkDeviceText.setText("血氧仪正常")
-        #     self.w.liveRunAction.setEnabled(True)
-        # else:
-        #     self.checkDeviceText.setText("设备连接异常")
-
-        self.w.liveRunAction.setEnabled(True)
-
-    def create_video_player(self):
-        frame = cv2.imread("icons/placeholder.png")
-        vb = pg.GraphicsView()
-        frame, _ = pg.makeARGB(frame, None, None, None, False)
-        img = pg.ImageItem(frame, axisOrder='row-major')
-        img.show()
-        vb.addItem(img)
-        return img, vb
-
-
-class DeviceDialog(QDialog):
-    def __init__(self, mainWindow):
-        super().__init__()
-
-        self.w = mainWindow
-        self.setWindowIcon(QtGui.QIcon('icons/pulse.svg'))
-        self.setWindowTitle(str('设备参数设置'))
-
-        with open("para.json", 'r', encoding='UTF-8') as f:
-            self.w.parameter = json.load(f)
-
-        self.layout = QtWidgets.QGridLayout()
-        self.layout.setSpacing(20)
-        self.layout.setAlignment(Qt.AlignTop)
-
-        self.spo2Label = QLabel(self)
-        self.spo2Label.setText(str(' 血氧仪参数'))
-        self.spo2Label.setStyleSheet('font-weight:bold;margin-top:20px;')
-
-        self.spo2PortTextBoxLabel = QLabel(self)
-        self.spo2PortTextBoxLabel.setText('  端口：')
-        self.spo2PortTextBoxLabel.setFixedSize(90, 35)
-        self.spo2PortTextBox = QLineEdit(self)
-        self.spo2PortTextBox.setText(mainWindow.parameter['spo2']['port'])
-        self.spo2PortTextBox.setFixedSize(180, 35)
-
-        self.spo2BaudTextBoxLabel = QLabel(self)
-        self.spo2BaudTextBoxLabel.setText('  波特率：')
-        self.spo2BaudTextBoxLabel.setFixedSize(90, 35)
-        self.spo2BaudTextBox = QLineEdit(self)
-        self.spo2BaudTextBox.setText(str(mainWindow.parameter['spo2']['baudrate']))
-        self.spo2BaudTextBox.setFixedSize(180, 35)
-
-        self.horizontalSpacer = QFrame()
-        self.horizontalSpacer.setFrameShape(QFrame.HLine)
-
-        self.eggLabel = QLabel(self)
-        self.eggLabel.setText(str(' 脑电仪参数'))
-        self.eggLabel.setStyleSheet('font-weight:bold;margin-top:10px;')
-
-        self.eggPortTextBoxLabel = QLabel(self)
-        self.eggPortTextBoxLabel.setText('  端口：')
-        self.eggPortTextBoxLabel.setFixedSize(90, 35)
-        self.eggPortTextBox = QLineEdit(self)
-        self.eggPortTextBox.setText(mainWindow.parameter['egg']['port'])
-        self.eggPortTextBox.setFixedSize(180, 35)
-
-        self.eggBaudTextBoxLabel = QLabel(self)
-        self.eggBaudTextBoxLabel.setText('  波特率：')
-        self.eggBaudTextBoxLabel.setFixedSize(90, 35)
-        self.eggBaudTextBox = QLineEdit(self)
-        self.eggBaudTextBox.setText(str(mainWindow.parameter['egg']['baudrate']))
-        self.eggBaudTextBox.setFixedSize(180, 35)
-
-        self.confirmButton = QtWidgets.QPushButton(self)
-        self.confirmButton.setText("确定")
-        self.confirmButton.clicked.connect(self.confirm)
-        self.confirmButton.setGeometry(200, 600, 100, 40)
-
-        self.warningText = QtWidgets.QLabel(self)
-        self.warningText.setStyleSheet("color:red")
-        self.warningText.setGeometry(200, 560, 100, 40)
-
-        self.layout.addWidget(self.spo2Label, 0, 0)
-        self.layout.addWidget(self.spo2PortTextBoxLabel, 1, 0)
-        self.layout.addWidget(self.spo2PortTextBox, 1, 1)
-        self.layout.addWidget(self.spo2BaudTextBoxLabel, 2, 0)
-        self.layout.addWidget(self.spo2BaudTextBox, 2, 1)
-        self.layout.addWidget(self.horizontalSpacer, 3, 0, 1, 3)
-        self.layout.addWidget(self.eggLabel, 4, 0)
-        self.layout.addWidget(self.eggPortTextBoxLabel, 5, 0)
-        self.layout.addWidget(self.eggPortTextBox, 5, 1)
-        self.layout.addWidget(self.eggBaudTextBoxLabel, 6, 0)
-        self.layout.addWidget(self.eggBaudTextBox, 6, 1)
-
-        self.setLayout(self.layout)
-        self.adjustSize()
-        self.resize(500, 680)
-
-    def confirm(self):
-        if self.spo2PortTextBox.text() == "" or self.spo2BaudTextBox.text() == "":
-            self.warningText.setText("参数不得为空！")
-            return
-
-        self.w.parameter = {
-            "spo2": {
-                "port": self.spo2PortTextBox.text(),
-                "baudrate": int(self.spo2BaudTextBox.text()),
-            },
-            "egg": {
-                "port": self.eggPortTextBox.text(),
-                "baudrate": int(self.eggBaudTextBox.text()),
-            }
-        }
-
-        with open("para.json", "w") as f:
-            f.write(json.dumps(self.w.parameter, ensure_ascii=False, indent=4, separators=(',', ':')))
-
-        self.close()
-
-
-class SessionDialog(QDialog):
-    def __init__(self, w):
-        super().__init__()
-        self.w = w
-        self.lastStart = 0
-
-        self.setWindowTitle('Select stored data')
-        self.setWindowIcon(QtGui.QIcon('icons/pulse.svg'))
-
-        self.sessionTable = QTableWidget()
-        # Make the table uneditable
-        self.sessionTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.sessionTable.setRowCount(4)
-        self.sessionTable.setColumnCount(1)
-        self.sessionTable.setHorizontalHeaderLabels(['数据信息'])
-        self.sessionTable.setVerticalHeaderLabels(
-            ['数据存储', '用户', '时长', '数据点:'])
-        self.sessionTable.horizontalHeader().setStretchLastSection(True)
-
-        self.sessionTable.setItem(0, 0, QTableWidgetItem(w.oxi.sess_available))
-        self.sessionTable.setItem(1, 0, QTableWidgetItem('n/a from CSV file'))
-        self.sessionTable.setItem(2, 0, QTableWidgetItem(str(w.oxi.sess_duration)))
-        self.sessionTable.setItem(3, 0, QTableWidgetItem(str(len(w.oxi.stored_data))))
-
-        self.plotButton = QtWidgets.QPushButton(self)
-        self.plotButton.setText('绘图')
-        self.plotButton.clicked.connect(self.on_plotData)
-
-        self.verticalLayout = QtWidgets.QVBoxLayout(self)
-        self.verticalLayout.addWidget(self.sessionTable)
-        self.verticalLayout.addWidget(self.plotButton)
-        self.resize(600, 500)
-
-    def on_plotData(self):
-        # Reset plot data and rendered plot
-        self.close()
-        self.w.openPlotWidget()
-        # self.w.on_plotStoredData()
+    def mergeData(self, dir, time):
+        spo2_data = []
+
+        with open(dir + '/spo2.csv') as csvfile:
+            csv_reader = csv.reader(csvfile)
+            total_header = next(csv_reader)
+
+            for row in csv_reader:
+                spo2_data.append(row)
+
+        emotion_data = []
+        with open(dir + '/emotion.csv') as csvfile:
+            csv_reader = csv.reader(csvfile)
+            header = next(csv_reader)
+            total_header.extend(header[2:])
+            for row in csv_reader:
+                emotion_data.append(row)
+
+        last = 0
+        total_length = len(spo2_data)
+
+        for data in emotion_data:
+            empty = ['', '', '', '', '', '', '']
+
+            if last > total_length:
+                break
+            while last < total_length - 1:
+                if float(spo2_data[last][1]) - float(data[1]) <= 0 and float(spo2_data[last + 1][1]) - float(
+                        data[1]) >= 0:
+                    break
+                spo2_data[last].extend(empty)
+                last = last + 1
+
+            spo2_data[last].extend(data[2:])
+
+        with open(dir + '/merged.csv', 'w', newline='') as f:
+            datawriter = csv.writer(f, delimiter=',')
+            datawriter.writerow(total_header)
+            datawriter.writerows(spo2_data)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,69 @@
+import cv2
+import pyqtgraph as pg
+from PyQt5 import uic
+from PyQt5.QtChart import QBarSet, QBarSeries, QChart, QBarCategoryAxis, QValueAxis
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget
+
+
+class PlotWidget(QWidget):
+    def __init__(self, mainWindow):
+        super().__init__()
+
+        self.w = mainWindow
+        self.ui = uic.loadUi('./view/plot_widget.ui', self)
+
+        self.ui.pulse_plot.setLabel('left', text='Pulse rate [bpm]')
+        self.ui.pulse_plot.setLabel('bottom', text='Time [s]')
+        self.pulse_curve = self.ui.pulse_plot.plot(pen=pg.mkPen('r', width=2))
+
+        self.ui.spo2_plot.setLabel('left', text='Spo2 [%]')
+        self.ui.spo2_plot.setLabel('bottom', text='Time [s]')
+        self.spo2_curve = self.ui.spo2_plot.plot(pen=pg.mkPen('r', width=2))
+
+        self.barSet = QBarSet('data')
+        self.barSet.append([0, 0, 0, 0, 0, 0, 0])
+        self.barSeries = QBarSeries()
+        self.barSeries.append(self.barSet)
+
+        chart = QChart()
+        chart.addSeries(self.barSeries)
+
+        # 设置横向坐标(X轴)
+        categories = ["angry", "disgust", "scared", "happy", "sad", "surprised", "neutral"]
+        axisX = QBarCategoryAxis()
+        axisX.append(categories)
+        chart.addAxis(axisX, Qt.AlignBottom)
+        self.barSeries.attachAxis(axisX)
+
+        # 设置纵向坐标(Y轴)
+        axisY = QValueAxis()
+        axisY.setRange(0, 1)
+        chart.addAxis(axisY, Qt.AlignLeft)
+        self.barSeries.attachAxis(axisY)
+
+        chart.legend().setVisible(False)
+        self.ui.bar_chart.setChart(chart)
+
+        self.create_video_player()
+
+        self.w.statusBar = self.w.statusBar()
+        self.w.statusBar.showMessage('状态：未开启')
+        self.w.resize(1280, 800)
+
+    def checkDevice(self):
+        if self.w.oxi.setup_device(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
+            self.ui.checkDeviceText.setText("血氧仪正常")
+            self.w.liveRunAction.setEnabled(True)
+        else:
+            self.ui.checkDeviceText.setText("设备连接异常")
+
+        self.w.liveRunAction.setEnabled(True)
+
+    def create_video_player(self):
+        # frame = cv2.imread("../icons/placeholder.png")
+        frame = cv2.imread("D:/buaa/l/intern/psy/code/spo2/signal_capture/view/placeholder.png")
+        frame, _ = pg.makeARGB(frame, None, None, None, False)
+        self.img = pg.ImageItem(frame, axisOrder='row-major')
+        self.img.show()
+        self.ui.vb.addItem(self.img)
