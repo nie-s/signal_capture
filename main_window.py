@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QFileDialog
 
 from device.cms50ew import CMS50EW
 from device.real_time_video import Emotion
-from session_dialog import SessionDialog
+from view.session_dialog import SessionDialog
 from thread.emotion_thread import EmotionThread
 from thread.oxi_thread import LiveThread
 from view.device_dialog import DeviceDialog

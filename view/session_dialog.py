@@ -9,7 +9,7 @@ class SessionDialog(QDialog):
         self.lastStart = 0
 
         self.setWindowTitle('Select stored data')
-        self.setWindowIcon(QtGui.QIcon('icons/pulse.svg'))
+        self.setWindowIcon(QtGui.QIcon('../icons/pulse.svg'))
 
         self.sessionTable = QTableWidget()
         # Make the table uneditable
