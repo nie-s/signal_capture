@@ -1,3 +1,5 @@
+import datetime
+
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QComboBox
@@ -99,6 +101,11 @@ class MainWidget(QWidget):
             'subjectId': self.subjectId,
         }
 
+        now = datetime.datetime.now()
+        self.w.start = str(now.strftime("%Y-%m-%d-%H-%M-%S"))
+
+        self.w.folder = 'data/' + self.w.information['subjectId'] + '-' + self.w.information[
+            'subjectName'] + "/" + self.w.start
         self.w.pw = PlotWidget(self.w)
         self.w.setCentralWidget(self.w.pw)
         self.w.pw.checkDevice()

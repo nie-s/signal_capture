@@ -76,10 +76,7 @@ class MainWindow(QMainWindow):
     def on_liveRunAction(self):
 
         if not self.live_running:
-            now = datetime.datetime.now()
-            self.start = str(now.strftime("%Y-%m-%d-%H-%M-%S"))
-            self.folder = 'data/' + self.information['subjectId'] + '-' + self.information[
-                'subjectName'] + "/" + self.start
+
 
             self.live_running = True
             self.liveThread = LiveThread(self.oxi, self)
