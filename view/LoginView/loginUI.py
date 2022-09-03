@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
     def setupUi(self, Form):
-        Form.setObjectName("开始")
+        Form.setObjectName("开启视频任务")
         Form.resize(400, 300)
         self.pushButton = QtWidgets.QPushButton(Form)
         self.pushButton.setGeometry(QtCore.QRect(102, 117, 181, 41))
@@ -24,5 +24,5 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "开始"))
+        Form.setWindowTitle(_translate("Form", "开启视频任务"))
         self.pushButton.setText(_translate("Form", "点击开始视频观看任务"))

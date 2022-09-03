@@ -32,28 +32,29 @@ class MainWindow(QMainWindow):
 
         self.information = {}
 
+        # 设置任务栏的四个按钮链接
         self.openSessAction = QAction(QtGui.QIcon('icons/document-open-symbolic.svg'),
                                       'Open CSV session file', self)
-        self.openSessAction.triggered.connect(self.on_openSessAction)
+        self.openSessAction.triggered.connect(self.on_openSessAction)  # 把第一个图标链接到“打开数据文件”函数
 
-        serDialogAction = QAction(QtGui.QIcon('icons/usb.svg'), '设备参数设置', self)
-        serDialogAction.triggered.connect(self.onSerDialogAction)
+        self.serDialogAction = QAction(QtGui.QIcon('icons/usb.svg'), '设备参数设置', self)
+        self.serDialogAction.triggered.connect(self.onSerDialogAction)  # 把第二个图标链接到“设置参数”函数
 
         self.liveRunAction = QAction(QtGui.QIcon('icons/media-playback-start-symbolic.svg'), 'Retrieve live data', self)
-        self.liveRunAction.setEnabled(False)
-        self.liveRunAction.triggered.connect(self.on_liveRunAction)
-        self.live_running = False
+        self.liveRunAction.setEnabled(False)  # 先把该按钮禁用（等到登录成功后才能用）
+        self.liveRunAction.triggered.connect(self.on_liveRunAction)  # 把第三个图标链接到“查看实时数据”函数
+        self.live_running = False  # 定义一个变量记录当前是否正在实时记录
 
         self.plotStoredDataAction = QAction(QtGui.QIcon('icons/appointment-new.svg'),
                                             'Retrieve recorded data', self)
-        self.plotStoredDataAction.setEnabled(False)
-        self.plotStoredDataAction.triggered.connect(self.on_plotStoredDataAction)
+        self.plotStoredDataAction.setEnabled(False)  # 先把该按钮禁用（等到登录成功后才能用）
+        self.plotStoredDataAction.triggered.connect(self.on_plotStoredDataAction)  # 把第四个图标链接到“回放记录的数据”函数
 
+        # 设置任务栏的界面
         toolBar = self.addToolBar('Toolbar')
         toolBar.setMovable(False)
         toolBar.addAction(self.openSessAction)
-        toolBar.addAction(serDialogAction)
-
+        toolBar.addAction(self.serDialogAction)
         toolBar.addAction(self.liveRunAction)
         toolBar.addAction(self.plotStoredDataAction)
         toolBar.setIconSize(QtCore.QSize(32, 32))
@@ -64,11 +65,20 @@ class MainWindow(QMainWindow):
         self.adjustSize()
         self.resize(800, 600)
 
-        self.cw = MainWidget(self)
+        # 首先显示登陆页面
+        self.cw = MainWidget(self)  # 创建主页面窗口（姓名学号那些）
         self.setCentralWidget(self.cw)
         self.pw = None
 
         self.show()
+
+    def on_openSessAction(self):
+        filename = QFileDialog.getOpenFileName(self)[0]  # 返回用户所选择文件的名称，并打开该文件
+
+        if filename:
+            self.oxi.open_csv(filename)  # 利用cms50ew里的函数打开csv文件
+            sessDialog = SessionDialog(self)  # csv必须不为空才能正常查看数据
+            sessDialog.exec_()
 
     def onSerDialogAction(self):
         self.devDialog = DeviceDialog(self)
@@ -76,12 +86,12 @@ class MainWindow(QMainWindow):
 
     def on_liveRunAction(self):
 
-        if not self.live_running:
+        if not self.live_running:  # 若当前不是实时监测状态，则开启该状态
 
             self.live_running = True
-            self.liveThread = LiveThread(self.oxi, self)
+            self.liveThread = LiveThread(self.oxi, self)  # 开启一个血氧脉搏监测线程
             self.liveThread.start()
-            time.sleep(0.2)
+            time.sleep(0.2)  # ？？？
 
             self.emotionThread = EmotionThread(self.emotion, self, self.parameter['camera']['index'])
             self.emotionThread.start()
@@ -89,12 +99,12 @@ class MainWindow(QMainWindow):
             self.eggThread = EggThread(self.egg, self)
             self.eggThread.start()
 
-            time.sleep(0.2)
+            time.sleep(0.2)  # ？？？
 
             self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-stop-symbolic.svg'))
             self.liveRunAction.setEnabled(True)
-            self.statusBar.showMessage('Status: Initiating live stream ...')
-        else:
+            self.statusBar().showMessage('Status: Initiating live stream ...')
+        else:  # 此时说明是结束实时监测操作
             self.live_running = False
             time.sleep(0.2)  # Give thread the chance to end itself
 
@@ -111,22 +121,14 @@ class MainWindow(QMainWindow):
             self.pw.ui.vb.addItem(self.img)
 
             # self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-start-symbolic.svg'))
-            self.liveRunAction.setEnabled(False)
-            self.statusBar.showMessage('状态：连接关闭')
-
-    def on_openSessAction(self):
-        filename = QFileDialog.getOpenFileName(self)[0]
-
-        if filename:
-            self.oxi.open_csv(filename)
-            sessDialog = SessionDialog(self)
-            sessDialog.exec_()
+            self.liveRunAction.setEnabled(False)  # 关闭后不能反复打开
+            self.statusBar().showMessage('状态：连接关闭')
 
     def on_plotStoredDataAction(self):
-        self.csvThread = LiveThread(self.oxi, self)
+        self.csvThread = LiveThread(self.oxi, self)  # 开启一个csv数据回放线程
         self.csvThread.plotStoredData()
 
-    def openPlotWidget(self):
+    def openPlotWidget(self):  # 创建曲线图窗口
         if self.pw is None:
             self.pw = pg.PlotWidget(self)
             self.setCentralWidget(self.pw)
