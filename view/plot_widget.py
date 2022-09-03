@@ -23,6 +23,17 @@ class PlotWidget(QWidget):
         self.ui.spo2_plot.setLabel('bottom', text='Time [s]')
         self.spo2_curve = self.ui.spo2_plot.plot(pen=pg.mkPen('r', width=2))
 
+
+
+
+        self.attention_curve = self.ui.egg_plot.plot(pen=pg.mkPen('r', width=2))
+        self.meditation_curve = self.ui.egg_plot.plot(pen=pg.mkPen('g', width=2))
+        self.rawValue_curve = self.ui.egg_plot.plot(pen=pg.mkPen('b', width=2))
+        self.delta_curve = self.ui.egg_plot.plot(pen=pg.mkPen('c', width=2))
+        self.lowAlpha_curve = self.ui.egg_plot.plot(pen=pg.mkPen('m', width=2))
+        self.highAlpha_curve = self.ui.egg_plot.plot(pen=pg.mkPen('y', width=2))
+        self.lowBeta_curve = self.ui.egg_plot.plot(pen=pg.mkPen('k', width=2))
+
         self.ui.bar_chart.setChart(self.createBarChart())
         self.create_video_player()
         self.ui.video_button.clicked.connect(self.openVideoWindow)

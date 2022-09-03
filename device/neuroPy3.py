@@ -20,6 +20,7 @@ class NeuroPy():
         self.midGamma_ydata = []
         self.poorSignal_ydata = []
         self.blinkStrength_ydata = []
+
         self.egg_xdata = []
 
         self.timer = 0
@@ -184,13 +185,13 @@ class NeuroPy():
 
         return data
 
-    def write_csv(self, timestamp):
+    def write_csv(self, folder, timestamp):
         """Writes session data as CSV file."""
-        filename = "data/egg_" + timestamp + ".csv"
+        filename = folder + "/egg.csv"
 
         with open(filename, 'w', newline='') as f:
             datawriter = csv.writer(f, delimiter=',')
             datawriter.writerow(
-                ['Time', 'Timestamp', ' Pulse rate [bpm]', 'spo2', 'ppg', 'strength', 'IBI', 'SDNN', 'SDSD', 'RMSSD',
-                 'pNN20', 'pNN50'])
+                ['Time', 'Timestamp', ' attention', 'meditation', 'blinkStrength', 'rawValue', 'delta', 'theta',
+                 'lowAlpha', 'highAlpha', 'lowBeta', 'highBeta', 'lowGamma', 'midGamma'])
             datawriter.writerows(self.stored_data)

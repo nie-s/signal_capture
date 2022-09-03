@@ -1,7 +1,5 @@
 import csv
-import datetime
 import json
-import os
 import sys
 import time
 
@@ -11,12 +9,14 @@ from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QFileDialog
 
 from device.cms50ew import CMS50EW
+from device.neuroPy3 import NeuroPy
 from device.real_time_video import Emotion
-from view.session_dialog import SessionDialog
+from thread.egg_thread import EggThread
 from thread.emotion_thread import EmotionThread
 from thread.oxi_thread import LiveThread
 from view.device_dialog import DeviceDialog
 from view.main_widget import MainWidget
+from view.session_dialog import SessionDialog
 
 
 class MainWindow(QMainWindow):
@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
 
         self.oxi = CMS50EW()
         self.emotion = Emotion()
+        self.egg = NeuroPy()
 
         with open("para.json", 'r', encoding='UTF-8') as f:
             self.parameter = json.load(f)
@@ -77,7 +78,6 @@ class MainWindow(QMainWindow):
 
         if not self.live_running:
 
-
             self.live_running = True
             self.liveThread = LiveThread(self.oxi, self)
             self.liveThread.start()
@@ -85,6 +85,10 @@ class MainWindow(QMainWindow):
 
             self.emotionThread = EmotionThread(self.emotion, self, self.parameter['camera']['index'])
             self.emotionThread.start()
+
+            self.eggThread = EggThread(self.egg, self)
+            self.eggThread.start()
+
             time.sleep(0.2)
 
             self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-stop-symbolic.svg'))
@@ -135,11 +139,9 @@ class MainWindow(QMainWindow):
     # self.pw.plotStoredData()
 
     def write(self):
-        if not os.path.isdir(self.folder):
-            os.makedirs(self.folder)
-
         self.liveThread.oxi.write_csv(self.folder, self.start)
         self.emotionThread.emotion.write_csv(self.folder, self.start)
+        self.eggThread.egg.write_csv(self.folder, self.start)
         self.mergeData(self.folder)
 
         with open(self.folder + '/info.json', "w", encoding="GBK") as f:
@@ -168,6 +170,28 @@ class MainWindow(QMainWindow):
 
         for data in emotion_data:
             empty = ['', '', '', '', '', '', '']
+
+            if last > total_length:
+                break
+            while last < total_length - 1:
+                if float(spo2_data[last][1]) - float(data[1]) <= 0 and float(spo2_data[last + 1][1]) - float(
+                        data[1]) >= 0:
+                    break
+                spo2_data[last].extend(empty)
+                last = last + 1
+
+            spo2_data[last].extend(data[2:])
+
+        egg_data = []
+        with open(folder + '/egg.csv') as csvfile:
+            csv_reader = csv.reader(csvfile)
+            header = next(csv_reader)
+            total_header.extend(header[2:])
+            for row in csv_reader:
+                egg_data.append(row)
+
+        for data in egg_data:
+            empty = ['', '', '', '', '', '', '', '', '', '', '', '']
 
             if last > total_length:
                 break

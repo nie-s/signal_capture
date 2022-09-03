@@ -31,8 +31,23 @@ class EggThread(QtCore.QThread):
         while self.w.live_running:
             self.egg.timer = time.time()
             start = self.getStartTime()
-            self.w.pw.attentioncurve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
-                                             self.egg.attention_ydata[start: self.egg.n_data_points])
+
+            self.w.pw.attention_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
+                                              self.egg.attention_ydata[start: self.egg.n_data_points])
+            self.w.pw.meditation_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
+                                               self.egg.meditation_ydata[start: self.egg.n_data_points])
+            self.w.pw.rawValue_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
+                                             self.egg.rawValue_ydata[start: self.egg.n_data_points])
+            self.w.pw.delta_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
+                                          self.egg.delta_ydata[start: self.egg.n_data_points])
+            self.w.pw.theta_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
+                                          self.egg.theta_ydata[start: self.egg.n_data_points])
+            self.w.pw.lowAlpha_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
+                                             self.egg.lowAlpha_ydata[start: self.egg.n_data_points])
+            self.w.pw.highAlpha_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
+                                              self.egg.highAlpha_ydata[start: self.egg.n_data_points])
+            self.w.pw.lowBeta_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
+                                            self.egg.lowBeta_ydata[start: self.egg.n_data_points])
 
     def getStartTime(self, is_csv=False):
         if is_csv:
