@@ -8,23 +8,28 @@ from PyQt5.QtWidgets import QWidget, QDesktopWidget
 from view.video_widget import ViewController
 
 
-class PlotWidget(QWidget):
+class PlotWidget(QWidget): # 显示各种结果曲线、拍摄视频的页面
     def __init__(self, mainWindow):
         super().__init__()
 
         self.w = mainWindow
         self.ui = uic.loadUi('./view/plot_widget.ui', self)
 
+        # 左,1，心率
         self.ui.pulse_plot.setLabel('left', text='Pulse rate [bpm]')
         self.ui.pulse_plot.setLabel('bottom', text='Time [s]')
         self.pulse_curve = self.ui.pulse_plot.plot(pen=pg.mkPen('r', width=2))
 
+        # 左2，spo2，血氧
         self.ui.spo2_plot.setLabel('left', text='Spo2 [%]')
         self.ui.spo2_plot.setLabel('bottom', text='Time [s]')
         self.spo2_curve = self.ui.spo2_plot.plot(pen=pg.mkPen('r', width=2))
 
+        # 情绪栅格
         self.ui.bar_chart.setChart(self.createBarChart())
+        # 拍摄视频显示栏
         self.create_video_player()
+        # 开启观看视频任务按钮
         self.ui.video_button.clicked.connect(self.openVideoWindow)
 
         self.w.statusBar = self.w.statusBar()
@@ -35,7 +40,7 @@ class PlotWidget(QWidget):
         self.w.move((screen.width() - size.width()) / 2,
                     (screen.height() - size.height()) / 2)
 
-    def createBarChart(self):
+    def createBarChart(self): # 创建情绪栅模块
 
         self.barSet = QBarSet('data')
         self.barSet.append([0, 0, 0, 0, 0, 0, 0])
@@ -64,7 +69,7 @@ class PlotWidget(QWidget):
     def checkDevice(self):
         if self.w.oxi.setup_device(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
             self.ui.checkDeviceText.setText("血氧仪正常")
-            self.w.liveRunAction.setEnabled(True)
+            self.w.liveRunAction.setEnabled(True) # 可以点击按钮进行实时监测
         else:
             self.ui.checkDeviceText.setText("设备连接异常")
 

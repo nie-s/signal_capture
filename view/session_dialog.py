@@ -2,8 +2,8 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QDialog, QTableWidget, QTableWidgetItem
 
 
-class SessionDialog(QDialog):
-    def __init__(self, w):
+class SessionDialog(QDialog): # 用于回放已经存储的数据
+    def __init__(self, w): # w 是传进来的class
         super().__init__()
         self.w = w
         self.lastStart = 0

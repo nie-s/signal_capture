@@ -13,9 +13,11 @@ class DeviceDialog(QDialog):
         self.setWindowIcon(QtGui.QIcon('icons/pulse.svg'))
         self.setWindowTitle(str('设备参数设置'))
 
+        # 把para.json里的参数导入（作为默认初始参数）
         with open("para.json", 'r', encoding='UTF-8') as f:
             self.w.parameter = json.load(f)
 
+        #一系列ui设计
         self.layout = QtWidgets.QGridLayout()
         self.layout.setSpacing(20)
         self.layout.setAlignment(Qt.AlignTop)
@@ -76,7 +78,7 @@ class DeviceDialog(QDialog):
 
         self.confirmButton = QtWidgets.QPushButton(self)
         self.confirmButton.setText("确定")
-        self.confirmButton.clicked.connect(self.confirm)
+        self.confirmButton.clicked.connect(self.confirm) # 链接确定按钮到 “确定"函数
         self.confirmButton.setGeometry(200, 600, 100, 40)
 
         self.warningText = QtWidgets.QLabel(self)
@@ -109,7 +111,7 @@ class DeviceDialog(QDialog):
             self.warningText.setText("参数不得为空！")
             return
 
-        self.w.parameter = {
+        self.w.parameter = { # 根据用户的输入更新端口和波特率等参数
             "spo2": {
                 "port": self.spo2PortTextBox.text(),
                 "baudrate": int(self.spo2BaudTextBox.text()),
@@ -123,6 +125,7 @@ class DeviceDialog(QDialog):
             }
         }
 
+        # 将用户更新的参数记录下来，作为下一次的默认初始参数
         with open("para.json", "w") as f:
             f.write(json.dumps(self.w.parameter, ensure_ascii=False, indent=4, separators=(',', ':')))
 

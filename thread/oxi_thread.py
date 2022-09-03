@@ -6,7 +6,7 @@ from PyQt5.QtCore import QTimer
 
 
 class LiveThread(QtCore.QThread):
-    def __init__(self, oxi, w):
+    def __init__(self, oxi, w): # oxi是CMS50EW()， w是MainWindow
         super().__init__()
         self.oxi = oxi
         self.w = w
@@ -17,7 +17,7 @@ class LiveThread(QtCore.QThread):
     def run(self):
         self.w.pw.pulse_curve.clear()
 
-        self.oxi.initiate_device()
+        self.oxi.initiate_device() # 初始化设备
         self.oxi.send_cmd(self.oxi.cmd_get_live_data)
         self.oxi.currentdatetime = QtCore.QDateTime.currentDateTime()
         self.oxi.starttime = time.time()

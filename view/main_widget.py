@@ -106,6 +106,6 @@ class MainWidget(QWidget):
 
         self.w.folder = 'data/' + self.w.information['subjectId'] + '-' + self.w.information[
             'subjectName'] + "/" + self.w.start
-        self.w.pw = PlotWidget(self.w)
+        self.w.pw = PlotWidget(self.w) # 登陆成功后显示监测结果页面
         self.w.setCentralWidget(self.w.pw)
         self.w.pw.checkDevice()
