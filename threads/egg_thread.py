@@ -13,6 +13,7 @@ class EggThread(QtCore.QThread):
         self.is_updating = False
 
     def run(self):
+        # self.w.pw.egg_curve.clear()
 
         self.egg.currentdatetime = QtCore.QDateTime.currentDateTime()
         self.egg.starttime = time.time()
@@ -29,7 +30,6 @@ class EggThread(QtCore.QThread):
 
         while self.w.live_running:
             self.egg.process_data()
-
             self.egg.timer = time.time()
             start = self.getStartTime()
 
@@ -47,6 +47,8 @@ class EggThread(QtCore.QThread):
                                               self.egg.highAlpha_ydata[start: self.egg.n_data_points])
             self.w.pw.lowBeta_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
                                             self.egg.lowBeta_ydata[start: self.egg.n_data_points])
+
+            self.egg.n_data_points += 1  # 仿照oxi_thread修改的
 
     def getStartTime(self, is_csv=False):
         if is_csv:

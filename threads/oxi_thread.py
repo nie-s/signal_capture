@@ -27,7 +27,7 @@ class LiveThread(QtCore.QThread):
             except (TypeError):
                 # except (TypeError, bluetooth.btcommon.BluetoothError):
                 # The following if condition prevents printing the restarting message
-                # if oxi.close_device is called while thread is running
+                # if oxi.close_device is called while threads is running
                 if self.w.live_running:
                     print('Something happened.\nRestarting live feed ...')
                     self.oxi.initiate_device()

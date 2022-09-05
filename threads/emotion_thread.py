@@ -14,7 +14,8 @@ class EmotionThread(QtCore.QThread):
         while self.w.live_running:
             try:
                 self.update_plot()
-            except (TypeError):
+            except Exception as e:
+                print(e)
                 if self.w.live_running:
                     self.camera, self.out = self.emotion.setup_webcam(self.w, self.index)
                     print('Something happened in emotion_thread')
