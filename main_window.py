@@ -11,9 +11,9 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QFileDialog
 from device.cms50ew import CMS50EW
 from device.neuroPy3 import NeuroPy
 from device.real_time_video import Emotion
-from thread.egg_thread import EggThread
-from thread.emotion_thread import EmotionThread
-from thread.oxi_thread import LiveThread
+from threads.egg_thread import EggThread
+from threads.emotion_thread import EmotionThread
+from threads.oxi_thread import LiveThread
 from view.device_dialog import DeviceDialog
 from view.main_widget import MainWidget
 from view.session_dialog import SessionDialog
@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
             time.sleep(0.2)  # ？？？
 
             self.emotionThread = EmotionThread(self.emotion, self, self.parameter['camera']['index'])
-            self.emotionThread.start()
+            # self.emotionThread.start()
 
             self.eggThread = EggThread(self.egg, self)
             self.eggThread.start()
@@ -103,10 +103,10 @@ class MainWindow(QMainWindow):
 
             self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-stop-symbolic.svg'))
             self.liveRunAction.setEnabled(True)
-            self.statusBar().showMessage('Status: Initiating live stream ...')
+            self.statusBar.showMessage('Status: Initiating live stream ...')
         else:  # 此时说明是结束实时监测操作
             self.live_running = False
-            time.sleep(0.2)  # Give thread the chance to end itself
+            time.sleep(0.2)  # Give threads the chance to end itself
 
             self.write()
 
@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
 
             # self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-start-symbolic.svg'))
             self.liveRunAction.setEnabled(False)  # 关闭后不能反复打开
-            self.statusBar().showMessage('状态：连接关闭')
+            self.statusBar.showMessage('状态：连接关闭')
 
     def on_plotStoredDataAction(self):
         self.csvThread = LiveThread(self.oxi, self)  # 开启一个csv数据回放线程

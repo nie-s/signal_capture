@@ -1,6 +1,6 @@
 {
     "spo2":{
-        "port":"COM3",
+        "port":"COM4",
         "baudrate":115200
     },
     "egg":{

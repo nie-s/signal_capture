@@ -25,7 +25,7 @@ class PlotWidget(QWidget): # 显示各种结果曲线、拍摄视频的页面
         self.ui.spo2_plot.setLabel('bottom', text='Time [s]')
         self.spo2_curve = self.ui.spo2_plot.plot(pen=pg.mkPen('r', width=2))
 
-
+        # 左3，脑电
         self.attention_curve = self.ui.egg_plot.plot(pen=pg.mkPen('r', width=2))
         self.meditation_curve = self.ui.egg_plot.plot(pen=pg.mkPen('g', width=2))
         self.rawValue_curve = self.ui.egg_plot.plot(pen=pg.mkPen('b', width=2))
@@ -75,7 +75,7 @@ class PlotWidget(QWidget): # 显示各种结果曲线、拍摄视频的页面
         chart.legend().setVisible(False)
         return chart
 
-    def checkDevice(self):
+    def checkDevice(self): # 检查血氧设备是否正常
         if self.w.oxi.setup_device(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
             self.ui.checkDeviceText.setText("血氧仪正常")
             self.w.liveRunAction.setEnabled(True) # 可以点击按钮进行实时监测
