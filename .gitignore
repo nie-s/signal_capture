@@ -2,3 +2,5 @@
 data/
 EGG/
 *.zip
+*.pyc
+__pycache__
