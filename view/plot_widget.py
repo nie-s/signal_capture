@@ -77,10 +77,20 @@ class PlotWidget(QWidget): # 显示各种结果曲线、拍摄视频的页面
 
     def checkDevice(self): # 检查血氧设备是否正常
         if self.w.oxi.setup_device(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
-            self.ui.checkDeviceText.setText("血氧仪正常")
-            self.w.liveRunAction.setEnabled(True) # 可以点击按钮进行实时监测
+            # self.ui.checkDeviceText.setText("血氧仪正常")
+            # self.w.liveRunAction.setEnabled(True) # 可以点击按钮进行实时监测
+            if self.w.egg.setup_device(self.w.parameter['egg']['port'], self.w.parameter['egg']['baudrate']):
+                self.ui.checkDeviceText.setText("血氧仪正常 脑电仪正常")
+                self.w.liveRunAction.setEnabled(True)  # 可以点击按钮进行实时监测
+            else:
+                self.ui.checkDeviceText.setText("血氧仪正常 脑电仪异常")
+
         else:
-            self.ui.checkDeviceText.setText("设备连接异常")
+            if self.w.egg.setup_device(self.w.parameter['egg']['port'], self.w.parameter['egg']['baudrate']):
+                self.ui.checkDeviceText.setText("血氧仪异常 脑电仪正常")
+                self.w.liveRunAction.setEnabled(True)  # 可以点击按钮进行实时监测
+            else:
+                self.ui.checkDeviceText.setText("血氧仪异常 脑电仪异常")
 
         self.w.liveRunAction.setEnabled(True)
 

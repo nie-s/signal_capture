@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
             time.sleep(0.2)  # ？？？
 
             self.emotionThread = EmotionThread(self.emotion, self, self.parameter['camera']['index'])
-            # self.emotionThread.start()
+            self.emotionThread.start()
 
             self.eggThread = EggThread(self.egg, self)
             self.eggThread.start()
