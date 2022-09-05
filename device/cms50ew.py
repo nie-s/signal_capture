@@ -175,7 +175,7 @@ class CMS50EW(): #脉搏血氧仪
         with open(filename, 'w', newline='') as f:
             datawriter = csv.writer(f, delimiter=',')
             datawriter.writerow(
-                ['Time', 'Timestamp', ' Pulse rate [bpm]', 'spo2', 'ppg', 'strength', 'IBI', 'SDNN', 'SDSD', 'RMSSD',
+                ['Time', 'Timestamp', 'finger',' Pulse rate [bpm]', 'spo2', 'ppg', 'strength', 'IBI', 'SDNN', 'SDSD', 'RMSSD',
                  'pNN20', 'pNN50'])
             datawriter.writerows(self.stored_data)
 
