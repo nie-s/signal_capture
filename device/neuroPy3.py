@@ -72,16 +72,13 @@ class NeuroPy():
                         begin = 1
                         i = i + 1
                         attention = int(payload[i], 16)
-                        self.attention_ydata.append(attention)
                     elif (code == '05'):  # meditation
                         begin = 1
                         i = i + 1
                         meditation = int(payload[i], 16)
-                        self.meditation_ydata.append(meditation)
                     elif (code == '16'):  # blink strength
                         i = i + 1
                         blinkStrength = int(payload[i], 16)
-                        self.blinkStrength_ydata.append(blinkStrength)
 
                     elif (code == '80'):  # raw value
                         i = i + 1  # for length/it is not used since length =1 byte long and always=2
@@ -93,7 +90,6 @@ class NeuroPy():
                                 rawValue = (val0 * 256 + int(payload[i], 16) - 65536)
                             else:
                                 rawValue = (val0 * 256 + int(payload[i], 16))
-                            self.rawValue_ydata.append(rawValue)
 
                         else:
                             i = i + 1
@@ -107,7 +103,6 @@ class NeuroPy():
                         val1 = int(payload[i], 16)
                         i = i + 1
                         delta = val0 * 65536 + val1 * 256 + int(payload[i], 16)
-                        self.delta_ydata.append(delta)
                         # theta:
                         i = i + 1
                         val0 = int(payload[i], 16)
@@ -115,7 +110,6 @@ class NeuroPy():
                         val1 = int(payload[i], 16)
                         i = i + 1
                         theta = val0 * 65536 + val1 * 256 + int(payload[i], 16)
-                        self.theta_ydata.append(theta)
 
                         # lowAlpha:
                         i = i + 1
@@ -124,7 +118,6 @@ class NeuroPy():
                         val1 = int(payload[i], 16)
                         i = i + 1
                         lowAlpha = val0 * 65536 + val1 * 256 + int(payload[i], 16)
-                        self.lowAlpha_ydata.append(lowAlpha)
 
                         # highAlpha:
                         i = i + 1
@@ -133,7 +126,6 @@ class NeuroPy():
                         val1 = int(payload[i], 16)
                         i = i + 1
                         highAlpha = val0 * 65536 + val1 * 256 + int(payload[i], 16)
-                        self.highAlpha_ydata.append(highAlpha)
 
                         # lowBeta:
                         i = i + 1
@@ -142,7 +134,6 @@ class NeuroPy():
                         val1 = int(payload[i], 16)
                         i = i + 1
                         lowBeta = val0 * 65536 + val1 * 256 + int(payload[i], 16)
-                        self.lowBeta_ydata.append(lowBeta)
 
                         # highBeta:
                         i = i + 1
@@ -151,7 +142,6 @@ class NeuroPy():
                         val1 = int(payload[i], 16)
                         i = i + 1
                         highBeta = val0 * 65536 + val1 * 256 + int(payload[i], 16)
-                        self.highBeta_ydata.append(highBeta)
 
                         # lowGamma:
                         i = i + 1
@@ -160,7 +150,6 @@ class NeuroPy():
                         val1 = int(payload[i], 16)
                         i = i + 1
                         lowGamma = val0 * 65536 + val1 * 256 + int(payload[i], 16)
-                        self.lowGamma_ydata.append(lowGamma)
 
                         # midGamma:
                         i = i + 1
@@ -169,7 +158,6 @@ class NeuroPy():
                         val1 = int(payload[i], 16)
                         i = i + 1
                         midGamma = val0 * 65536 + val1 * 256 + int(payload[i], 16)
-                        self.midGamma_ydata.append(midGamma)
 
                     else:
                         pass
@@ -180,6 +168,18 @@ class NeuroPy():
         nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
 
         self.egg_xdata.append(nowtimestamp - self.starttime)
+        self.attention_ydata.append(attention)
+        self.meditation_ydata.append(meditation)
+        self.lowAlpha_ydata.append(lowAlpha)
+        self.highAlpha_ydata.append(highAlpha)
+        self.lowBeta_ydata.append(lowBeta)
+        self.highBeta_ydata.append(highBeta)
+        self.lowGamma_ydata.append(lowGamma)
+        self.midGamma_ydata.append(midGamma)
+        self.delta_ydata.append(delta)
+        self.theta_ydata.append(theta)
+        self.blinkStrength_ydata.append(blinkStrength)
+        self.rawValue_ydata.append(rawValue)
 
         data = [nowtime, nowtimestamp, attention, meditation, blinkStrength, rawValue, delta, theta, lowAlpha,
                 highAlpha, lowBeta, highBeta, lowGamma, midGamma]

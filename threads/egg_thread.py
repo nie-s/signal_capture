@@ -11,6 +11,7 @@ class EggThread(QtCore.QThread):
         self.lastStart = 0
         self.lastEnd = 0
         self.is_updating = False
+        self.n_data_points = 0
 
     def run(self):
         # self.w.pw.egg_curve.clear()
@@ -30,6 +31,7 @@ class EggThread(QtCore.QThread):
 
         while self.w.live_running:
             self.egg.process_data()
+            self.egg.n_data_points += 1
             self.egg.timer = time.time()
             start = self.getStartTime()
 
