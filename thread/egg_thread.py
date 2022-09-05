@@ -13,7 +13,6 @@ class EggThread(QtCore.QThread):
         self.is_updating = False
 
     def run(self):
-        self.w.pw.egg_curve.clear()
 
         self.egg.currentdatetime = QtCore.QDateTime.currentDateTime()
         self.egg.starttime = time.time()
@@ -29,6 +28,8 @@ class EggThread(QtCore.QThread):
     def update_plot(self):
 
         while self.w.live_running:
+            self.egg.process_data()
+
             self.egg.timer = time.time()
             start = self.getStartTime()
 
@@ -40,8 +41,6 @@ class EggThread(QtCore.QThread):
                                              self.egg.rawValue_ydata[start: self.egg.n_data_points])
             self.w.pw.delta_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
                                           self.egg.delta_ydata[start: self.egg.n_data_points])
-            self.w.pw.theta_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
-                                          self.egg.theta_ydata[start: self.egg.n_data_points])
             self.w.pw.lowAlpha_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
                                              self.egg.lowAlpha_ydata[start: self.egg.n_data_points])
             self.w.pw.highAlpha_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
