@@ -23,6 +23,8 @@ class NeuroPy():
 
         self.egg_xdata = []
 
+        self.n_data_points = 0
+
         self.timer = 0
         self.starttime = 0
         self.stored_data = []

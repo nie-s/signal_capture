@@ -4,7 +4,7 @@
         "baudrate":115200
     },
     "egg":{
-        "port":"COM5",
+        "port":"COM3",
         "baudrate":57600
     },
     "camera":{

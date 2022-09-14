@@ -177,6 +177,7 @@ class CMS50EW():  # 脉搏血氧仪
             datawriter.writerow(
                 ['Time', 'Timestamp', 'finger', 'Pulse rate[bpm]', 'spo2', 'ppg', 'strength', 'IBI', 'SDNN', 'SDSD',
                  'RMSSD', 'pNN20', 'pNN50'])
+
             datawriter.writerows(self.stored_data)
 
         # self.plot_mpl(timestamp)
