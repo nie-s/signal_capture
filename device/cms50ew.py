@@ -10,7 +10,7 @@ import serial
 from device.hrv_calculator import HRV_Calculator
 
 
-class CMS50EW(): #脉搏血氧仪
+class CMS50EW():  # 脉搏血氧仪
     """Class to instantiate a CMS50EW pulse oximeter."""
 
     def __init__(self):
@@ -24,7 +24,7 @@ class CMS50EW(): #脉搏血氧仪
         self.starttime = 0
         self.stored_data = []
         self.pydatetime = None
-        self.hrv_Calculator = HRV_Calculator() #心率流量计算器
+        self.hrv_Calculator = HRV_Calculator()  # 心率流量计算器
         # Most of the following commands we don't use. They are just there as
         # some sort of documentation
         self.cmd_hello1 = b'\x7d\x81\xa7\x80\x80\x80\x80\x80\x80'
@@ -175,8 +175,8 @@ class CMS50EW(): #脉搏血氧仪
         with open(filename, 'w', newline='') as f:
             datawriter = csv.writer(f, delimiter=',')
             datawriter.writerow(
-                ['Time', 'Timestamp', ' Pulse rate [bpm]', 'spo2', 'ppg', 'strength', 'IBI', 'SDNN', 'SDSD', 'RMSSD',
-                 'pNN20', 'pNN50'])
+                ['Time', 'Timestamp', 'finger', 'Pulse rate[bpm]', 'spo2', 'ppg', 'strength', 'IBI', 'SDNN', 'SDSD',
+                 'RMSSD', 'pNN20', 'pNN50'])
             datawriter.writerows(self.stored_data)
 
         # self.plot_mpl(timestamp)
