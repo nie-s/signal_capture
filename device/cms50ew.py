@@ -129,6 +129,7 @@ class CMS50EW():  # 脉搏血氧仪
         pulse_rate = int(ord(value_list[5]) & 0x7f)
         spo2 = int(ord(value_list[6]) & 0x7f)
         ppg = int(ord(value_list[3]) & 0x7f)
+
         pulse_pd = pd.DataFrame(self.ppg_ydata)
         hrv = self.hrv_Calculator.cal_hrv(pulse_pd, 1, 60)
 
