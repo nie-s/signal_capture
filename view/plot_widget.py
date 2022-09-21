@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWidget, QDesktopWidget
 from view.video_widget import ViewController
 
 
-class PlotWidget(QWidget): # 显示各种结果曲线、拍摄视频的页面
+class PlotWidget(QWidget):  # 显示各种结果曲线、拍摄视频的页面
     def __init__(self, mainWindow):
         super().__init__()
 
@@ -26,14 +26,8 @@ class PlotWidget(QWidget): # 显示各种结果曲线、拍摄视频的页面
         self.spo2_curve = self.ui.spo2_plot.plot(pen=pg.mkPen('r', width=2))
 
         # 左3，脑电
-        self.attention_curve = self.ui.egg_plot.plot(pen=pg.mkPen('r', width=2))
-        self.meditation_curve = self.ui.egg_plot.plot(pen=pg.mkPen('g', width=2))
-        self.rawValue_curve = self.ui.egg_plot.plot(pen=pg.mkPen('b', width=2))
-        self.delta_curve = self.ui.egg_plot.plot(pen=pg.mkPen('c', width=2))
-        self.lowAlpha_curve = self.ui.egg_plot.plot(pen=pg.mkPen('m', width=2))
-        self.highAlpha_curve = self.ui.egg_plot.plot(pen=pg.mkPen('y', width=2))
-        self.lowBeta_curve = self.ui.egg_plot.plot(pen=pg.mkPen('k', width=2))
-
+        self.attention_curve = self.ui.egg_plot.plot(pen=pg.mkPen('r', width=2), name='attention')
+        self.meditation_curve = self.ui.egg_plot.plot(pen=pg.mkPen('g', width=2), name='meditation')
 
         self.ui.bar_chart.setChart(self.createBarChart())
         # 拍摄视频显示栏
@@ -49,7 +43,7 @@ class PlotWidget(QWidget): # 显示各种结果曲线、拍摄视频的页面
         self.w.move((screen.width() - size.width()) / 2,
                     (screen.height() - size.height()) / 2)
 
-    def createBarChart(self): # 创建情绪栅模块
+    def createBarChart(self):  # 创建情绪栅模块
 
         self.barSet = QBarSet('data')
         self.barSet.append([0, 0, 0, 0, 0, 0, 0])
@@ -75,7 +69,7 @@ class PlotWidget(QWidget): # 显示各种结果曲线、拍摄视频的页面
         chart.legend().setVisible(False)
         return chart
 
-    def checkDevice(self): # 检查血氧设备是否正常
+    def checkDevice(self):  # 检查血氧设备是否正常
         if self.w.oxi.setup_device(self.w.parameter['spo2']['port'], self.w.parameter['spo2']['baudrate']):
             # self.ui.checkDeviceText.setText("血氧仪正常")
             # self.w.liveRunAction.setEnabled(True) # 可以点击按钮进行实时监测

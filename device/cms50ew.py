@@ -14,8 +14,8 @@ class CMS50EW():  # 脉搏血氧仪
     """Class to instantiate a CMS50EW pulse oximeter."""
 
     def __init__(self):
-        self.pulse_xdata, self.pulse_ydata, self.spo2_xdata, self.spo2_ydata, self.ppg_ydata, self.ppg_ydata, self.finger_data, self.hrv_data = \
-            [[], [], [], [], [], [], ['Y'], []]
+        self.pulse_xdata, self.pulse_ydata, self.spo2_xdata, self.spo2_ydata, self.ppg_ydata, self.finger_data, self.hrv_data = \
+            [[], [], [], [], [], ['Y'], []]
         self.x_label = 'Time [s]'  # Define x-axis label for plots
         self.x_values = []
         self.plot_title = 'Saved session'
