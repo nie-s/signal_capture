@@ -91,14 +91,13 @@ class MainWindow(QMainWindow):
             self.live_running = True
             self.liveThread = LiveThread(self.oxi, self)  # 开启一个血氧脉搏监测线程
             self.liveThread.start()
-            time.sleep(0.2)  # ？？？
+            time.sleep(5)  # ？？？
 
             self.emotionThread = EmotionThread(self.emotion, self, self.parameter['camera']['index'])
             self.emotionThread.start()
 
             self.eggThread = EggThread(self.egg, self)
             self.eggThread.start()
-
             time.sleep(0.2)  # ？？？
 
             self.liveRunAction.setIcon(QtGui.QIcon('icons/media-playback-stop-symbolic.svg'))
@@ -192,10 +191,11 @@ class MainWindow(QMainWindow):
             for row in csv_reader:
                 egg_data.append(row)
 
+        last = 0
         for data in egg_data:
             empty = ['', '', '', '', '', '', '', '', '', '', '', '']
 
-            if last > total_length:
+            if last >= total_length:
                 break
             while last < total_length - 1:
                 if float(spo2_data[last][1]) - float(data[1]) <= 0 and float(spo2_data[last + 1][1]) - float(

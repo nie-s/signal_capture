@@ -5,3 +5,7 @@ EGG/
 *.pyc
 __pycache__
 .idea
+.mp4
+.exe
+build/
+.spec

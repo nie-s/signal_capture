@@ -23,7 +23,7 @@ class MainWinController(QWidget, Ui_Form):
         self.player.setVideoOutput(self.wgt_player)
         # self.player.setMedia(QMediaContent(QFileDialog.getOpenFileUrl()[0]))  # 选取视频文件
 
-        self.player.setMedia(QMediaContent(QUrl.fromLocalFile("view/10s静音.mp4")))
+        self.player.setMedia(QMediaContent(QUrl.fromLocalFile("view/taskVideo0805.mp4")))
 
         self.player.mediaStatusChanged.connect(self.recordTimeInfo)
 
@@ -87,6 +87,7 @@ class Questionnaire(QtWidgets.QWidget):
     def __init__(self):
         super(Questionnaire, self).__init__()
 
+        
         self.ques1 = QLabel('<a href="https://www.wenjuan.com/s/UZBZJvF6E0/">请在10s内点击并填写调查问卷')
         self.ques1.setOpenExternalLinks(True)
         self.ques2 = QLabel('<a href="https://www.wenjuan.com/s/r6nM32A/">hello,请在10s内点击并填写调查问卷')

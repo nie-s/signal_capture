@@ -23,10 +23,9 @@ class LiveThread(QtCore.QThread):
         while self.w.live_running:
             try:
                 self.update_plot()
-            except (TypeError):
-                # except (TypeError, bluetooth.btcommon.BluetoothError):
-                # The following if condition prevents printing the restarting message
-                # if oxi.close_device is called while threads is running
+            except Exception as e:
+                print("???")
+                print(e)
                 if self.w.live_running:
                     print('Something happened.\nRestarting live feed ...')
                     self.oxi.initiate_device()
@@ -47,6 +46,8 @@ class LiveThread(QtCore.QThread):
             self.oxi.timer = time.time()
 
             data = self.w.oxi.process_data()
+            # print("spo2_Data")
+            # print(data)
             finger = data[2]
             pulse_rate = data[3]
             spo2 = data[4]
@@ -63,7 +64,8 @@ class LiveThread(QtCore.QThread):
                     finger_out = True
                     counter = 0
                 elif not finger_out and counter < 21:
-                    self.append_plot_data(localtime, self.oxi.pulse_ydata[-1], self.oxi.spo2_ydata[-1])
+                    self.append_plot_data(localtime, self.oxi.pulse_ydata[-1], self.oxi.spo2_ydata[-1],
+                                          self.oxi.ppg_ydata[-1])
                     counter += 1
             elif (pulse_rate == 0) or (spo2 == 0):
                 self.append_plot_data(localtime, 0, 0, 0)

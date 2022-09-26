@@ -119,12 +119,19 @@ class CMS50EW():  # 脉搏血氧仪
                 counter += 1
             value_list.append(value)
 
+        now = datetime.datetime.now()
+        nowtimestamp = time.time()
+        nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+
+
         # Extract the key values from value_list
         finger = value_list[3]
         if finger == b'\xc0':
             finger = 'Y'
         else:
             finger = 'N'
+
+
         strength = int(ord(value_list[4][0:4]) & 0xf)
         pulse_rate = int(ord(value_list[5]) & 0x7f)
         spo2 = int(ord(value_list[6]) & 0x7f)
@@ -133,9 +140,6 @@ class CMS50EW():  # 脉搏血氧仪
         pulse_pd = pd.DataFrame(self.ppg_ydata)
         hrv = self.hrv_Calculator.cal_hrv(pulse_pd, 1, 60)
 
-        now = datetime.datetime.now()
-        nowtimestamp = time.time()
-        nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
 
         return [nowtime, nowtimestamp, finger, pulse_rate, spo2, ppg, strength,
                 hrv["IBI"], hrv["SDNN"], hrv["SDSD"], hrv["RMSSD"], hrv["pNN20"], hrv["pNN50"]]

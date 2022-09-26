@@ -22,10 +22,11 @@ class EggThread(QtCore.QThread):
         while self.w.live_running:
             try:
                 self.update_plot()
-            except (TypeError):
+            except Exception as e:
+                print(e)
                 if self.w.live_running:
-                    print('Something with egg....')
-                    self.egg.setup_device()
+                    # print('Something with egg....')
+                    self.egg.setup_device(self.w.parameter['egg']['port'], self.w.parameter['egg']['baudrate'])
 
     def update_plot(self):
 

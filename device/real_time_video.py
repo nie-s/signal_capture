@@ -32,11 +32,16 @@ class Emotion():
         return camera, self.outVideo
 
     def update(self, frame_read):
+        now = datetime.datetime.now()
+        nowtimestamp = time.time()
+        nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+
         frame = imutils.resize(frame_read, width=448, height=336)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         frameClone = frame.copy()
         preds, label, fX, fY, fW, fH = emtion_reg.get_emotion(gray)
+
         if preds is None:
             return
 
@@ -49,9 +54,7 @@ class Emotion():
             cv2.rectangle(frameClone, (fX, fY), (fX + fW, fY + fH),
                           (0, 0, 255), 2)
 
-        now = datetime.datetime.now()
-        nowtimestamp = time.time()
-        nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+
 
         preds = preds.tolist()
         data = [nowtime, nowtimestamp] + preds
