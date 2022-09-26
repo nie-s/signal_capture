@@ -40,16 +40,6 @@ class EggThread(QtCore.QThread):
                                               self.egg.attention_ydata[start: self.egg.n_data_points])
             self.w.pw.meditation_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
                                                self.egg.meditation_ydata[start: self.egg.n_data_points])
-            self.w.pw.rawValue_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
-                                             self.egg.rawValue_ydata[start: self.egg.n_data_points])
-            self.w.pw.delta_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
-                                          self.egg.delta_ydata[start: self.egg.n_data_points])
-            self.w.pw.lowAlpha_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
-                                             self.egg.lowAlpha_ydata[start: self.egg.n_data_points])
-            self.w.pw.highAlpha_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
-                                              self.egg.highAlpha_ydata[start: self.egg.n_data_points])
-            self.w.pw.lowBeta_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
-                                            self.egg.lowBeta_ydata[start: self.egg.n_data_points])
 
             self.egg.n_data_points += 1  # 仿照oxi_thread修改的
 
