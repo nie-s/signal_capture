@@ -2,22 +2,24 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 from view.LoginView.loginUI import Ui_Form
+from view.VideoView.video import VideoPlayer
 
 
-class LoginController(QWidget, Ui_Form):
+class OpenVideo(QWidget, Ui_Form):
     loginSignal = pyqtSignal(str)
 
-    def __init__(self, parent=None):
-        super(LoginController, self).__init__(parent)
+    def __init__(self, w, parent=None):
+        super(OpenVideo, self).__init__(parent)
         self.setupUi(self)
+        self.w = w
         self.pushButton.clicked.connect(self.btnEnterClicked)
 
     def btnEnterClicked(self):
         print("enter clicked")
-
-        # 中间可以添加处理逻辑
-
-        self.loginSignal.emit("login")
+        self.viewVideo = VideoPlayer(self.w)
+        self.viewVideo.play()
+        self.viewVideo.showMaximized()
+        self.viewVideo.show()
         self.close()
 
     def btnExitClicked(self):

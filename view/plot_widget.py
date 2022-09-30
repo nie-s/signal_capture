@@ -5,7 +5,7 @@ from PyQt5.QtChart import QBarSet, QBarSeries, QChart, QBarCategoryAxis, QValueA
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QDesktopWidget
 
-from view.video_widget import ViewController
+from view.LoginView.openVideo import OpenVideo
 
 
 class PlotWidget(QWidget):  # 显示各种结果曲线、拍摄视频的页面
@@ -97,5 +97,5 @@ class PlotWidget(QWidget):  # 显示各种结果曲线、拍摄视频的页面
         self.ui.vb.addItem(self.img)
 
     def openVideoWindow(self):
-        self.view = ViewController(self.w)
-        self.view.loadLoginView()
+        self.viewlogin = OpenVideo(self.w)
+        self.viewlogin.show()

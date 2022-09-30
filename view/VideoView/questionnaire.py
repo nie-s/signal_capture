@@ -1,48 +1,65 @@
+import csv
+import os
+
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsPixmapItem, QDialog
-from PyQt5.QtGui import QImage, QPixmap
-import matplotlib.pyplot as plt
-from view.VideoView.questionUI import Ui_dialog
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsPixmapItem, QDialog, QButtonGroup
+from view.VideoView.questionUI import Ui_questionnaire
+import datetime
+import time
 
 
-class picturezoom(QDialog, Ui_dialog):
-    '''
-    Ui_Form里的QGraphicsView是这样的：
-    self.segpicView = QtWidgets.QGraphicsView(Form)
-    self.segpicView.setGeometry(QtCore.QRect(40, 120, 351, 341))
-    self.segpicView.setObjectName("segpicView")
-    '''
+class Questionnaire(QDialog, Ui_questionnaire):
+    submitSignal = pyqtSignal()
 
+    def __init__(self, w, serial, parent=None):
+        super(Questionnaire, self).__init__(parent)
+        self.setupUi(self)
+        self.w = w
+        self.serial = serial  # 记录第几次调用该页面，对应第几个视频
+        self.btnGroup1 = QButtonGroup()
+        for i in range(1, 10):
+            btn_name = 'radioButton_1_' + str(i)
+            self.btnGroup1.addButton(eval("self." + btn_name))
 
-def __init__(self, parent=None):
-    """
-    Constructor
-    @param parent reference to the parent widget
-    @type QWidget
-    """
-    super(picturezoom, self).__init__(parent)
-    self.setupUi(self)
-    self.ui = uic.loadUi("./questionUI.ui")
-    img = plt.imread("./icons.问卷_唤醒度.png")  # 读取图像
+        self.btnGroup2 = QButtonGroup()
+        for i in range(1, 10):
+            btn_name = 'radioButton_2_' + str(i)
+            self.btnGroup2.addButton(eval("self." + btn_name))
 
-    x = img.shape[1]  # 获取图像大小
-    y = img.shape[0]
+        self.btnGroup3 = QButtonGroup()
+        for i in range(1, 4):
+            btn_name = 'radioButton_3_' + str(i)
+            self.btnGroup3.addButton(eval("self." + btn_name))
 
-    frame = QImage(img, y, x, x * 3, QImage.Format_RGB888)
-    # 此处x*3最好加上，否则图片会出现倾斜
-    pix = QPixmap.fromImage(frame)
-    item = QGraphicsPixmapItem(pix)  # 创建像素图元
+        self.submitButton.clicked.connect(self.submit)
 
-    scene = QGraphicsScene()  # 创建场景
-    scene.addItem(item)
-    self.graphicsView.setScene(scene)  # 将场景添加至视图
+    def submit(self):
+        answer1 = self.btnGroup1.checkedButton().text()
+        answer2 = self.btnGroup2.checkedButton().text()
+        answer3 = self.btnGroup3.checkedButton().text()
+
+        now = datetime.datetime.now()
+        nowtimestamp = time.time()
+        nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+        print("start record content of questionnaire")
+        filename = self.w.folder + '/questionnaire.csv'
+        if not os.path.exists(filename):
+            with open(filename, 'w', newline='') as f:
+                datawriter = csv.writer(f, delimiter=',')
+                datawriter.writerow(['视频序号', 'nowtime', 'nowtimestamp', '效度评分', '唤醒度评分', '是否看过该视频'])
+
+        with open(filename, 'a', newline='') as f:
+            datawriter = csv.writer(f, delimiter=',')
+            datawriter.writerow([self.serial, nowtime, nowtimestamp, answer1, answer2, answer3])
+
+        self.close()
 
 
 if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
-    piczoom = picturezoom()
-    piczoom.show()
+    ques = Questionnaire()
+    ques.show()
     app.exec_()

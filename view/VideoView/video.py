@@ -3,19 +3,19 @@ import datetime
 import os
 import time
 
-from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtWidgets import *
 
+from view.VideoView.questionnaire import Questionnaire
 from view.VideoView.simple_videoUI import Ui_Form
 
 
-class MainWinController(QWidget, Ui_Form):
+class VideoPlayer(QWidget, Ui_Form):
     endSignal = pyqtSignal()
 
     def __init__(self, w, parent=None):
-        super(MainWinController, self).__init__(parent)
+        super(VideoPlayer, self).__init__(parent)
         self.w = w
         self.setupUi(self)
         # 播放器
@@ -53,14 +53,16 @@ class MainWinController(QWidget, Ui_Form):
         self.timer3.setSingleShot(True)
         self.timer4.setSingleShot(True)
 
-        self.timer1.start(10000)  # 第一段2:59, 3:02s弹出问卷182000
+        self.timer1.start(10)  # 第一段2:59, 3:02s弹出问卷182000
         # self.timer1.start(182000) #第一段2:59, 3:02s弹出问卷182000
-        self.timer2.start(430000)  # 第二段3:08, 7:10s弹出问卷
+        self.timer2.start(10000)  # 第二段3:08, 7:10s弹出问卷
         self.timer3.start(700000)  # 第三段3:29, 11:40s弹出问卷
         self.timer4.start(935000)  # 第四段2:55, 15:35s弹出问卷
         # 计时结束调用timeout_slot()方法,注意不要加（）
-        self.timer1.timeout.connect(self.popQues1)
-        self.timer2.timeout.connect(self.popQues2)
+        self.timer1.timeout.connect(lambda: self.popQues(1))
+        self.timer2.timeout.connect(lambda: self.popQues(2))
+        self.timer3.timeout.connect(lambda: self.popQues(3))
+        self.timer4.timeout.connect(lambda: self.popQues(4))
 
     def recordTimeInfo(self):
         if self.player.mediaStatus() == 7:
@@ -73,54 +75,48 @@ class MainWinController(QWidget, Ui_Form):
                 datawriter = csv.writer(f, delimiter=',')
                 datawriter.writerow([nowtime, nowtimestamp, '视频结束'])
 
-    def popQues1(self):
-        self.quesView = Questionnaire()
-        self.quesView.showWidget(1)
-
-    def popQues2(self):
-        self.quesView = Questionnaire()
-        self.quesView.showWidget(2)
-
-
-# 弹出窗体类
-class Questionnaire(QtWidgets.QWidget):
-    def __init__(self):
-        super(Questionnaire, self).__init__()
-
-        
-        self.ques1 = QLabel('<a href="https://www.wenjuan.com/s/UZBZJvF6E0/">请在10s内点击并填写调查问卷')
-        self.ques1.setOpenExternalLinks(True)
-        self.ques2 = QLabel('<a href="https://www.wenjuan.com/s/r6nM32A/">hello,请在10s内点击并填写调查问卷')
-        self.ques2.setOpenExternalLinks(True)
-        self.ques3 = QLabel('<a href="https://www.wenjuan.com/s/N7jEVbS/">hello,请在10s内点击并填写调查问卷')
-        self.ques3.setOpenExternalLinks(True)
-        self.ques4 = QLabel('<a href="https://www.wenjuan.com/s/N7jEVbS/">hello,请在10s内点击并填写调查问卷')
-        self.ques4.setOpenExternalLinks(True)
-
-    def showWidget(self, select):
-        ques = {
-            1: self.ques1,
-            2: self.ques2
-        }
-        # 设置大小
-        self.resize(300, 300)
-        # 设置标题
-        self.setWindowTitle("调查问卷")
-
-        # 垂直布局
-        layout = QVBoxLayout()
-
-        layout.addStretch(1)
-
-        # 链接
-        layout.addWidget(ques.get(select))
-
-        layout.addStretch(1)
-
-        self.setLayout(layout)
-        self.show()
-
-        self.timer = QTimer(self)  # 初始化一个定时器
-        self.timer.timeout.connect(self.close)  # 计时结束调用operate()方法
-        self.timer.setSingleShot(True)
-        self.timer.start(10000)  # 设置计时间隔并启动 2s后关闭窗口
+    def popQues(self, serial):
+        self.quesView = Questionnaire(self.w, serial)
+        self.quesView.show()
+# # 弹出窗体类
+# class Questionnaire(QtWidgets.QWidget):
+#     def __init__(self):
+#         super(Questionnaire, self).__init__()
+#
+#
+#         self.ques1 = QLabel('<a href="https://www.wenjuan.com/s/UZBZJvF6E0/">请在10s内点击并填写调查问卷')
+#         self.ques1.setOpenExternalLinks(True)
+#         self.ques2 = QLabel('<a href="https://www.wenjuan.com/s/r6nM32A/">hello,请在10s内点击并填写调查问卷')
+#         self.ques2.setOpenExternalLinks(True)
+#         self.ques3 = QLabel('<a href="https://www.wenjuan.com/s/N7jEVbS/">hello,请在10s内点击并填写调查问卷')
+#         self.ques3.setOpenExternalLinks(True)
+#         self.ques4 = QLabel('<a href="https://www.wenjuan.com/s/N7jEVbS/">hello,请在10s内点击并填写调查问卷')
+#         self.ques4.setOpenExternalLinks(True)
+#
+#     def showWidget(self, select):
+#         ques = {
+#             1: self.ques1,
+#             2: self.ques2
+#         }
+#         # 设置大小
+#         self.resize(300, 300)
+#         # 设置标题
+#         self.setWindowTitle("调查问卷")
+#
+#         # 垂直布局
+#         layout = QVBoxLayout()
+#
+#         layout.addStretch(1)
+#
+#         # 链接
+#         layout.addWidget(ques.get(select))
+#
+#         layout.addStretch(1)
+#
+#         self.setLayout(layout)
+#         self.show()
+#
+#         self.timer = QTimer(self)  # 初始化一个定时器
+#         self.timer.timeout.connect(self.close)  # 计时结束调用operate()方法
+#         self.timer.setSingleShot(True)
+#         self.timer.start(10000)  # 设置计时间隔并启动 2s后关闭窗口
