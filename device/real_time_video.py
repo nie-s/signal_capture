@@ -26,7 +26,7 @@ class Emotion():
         if not os.path.isdir(w.folder):
             os.makedirs(w.folder)
 
-        self.fps = camera.get(cv2.CAP_PROP_FPS)
+        self.fps = int (camera.get(cv2.CAP_PROP_FPS) / 2.7)
         self.outVideo = cv2.VideoWriter(w.folder + '/out.avi', cv2.VideoWriter_fourcc(*'mp4v'), self.fps, (448, 336))
 
         return camera, self.outVideo
