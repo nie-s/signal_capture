@@ -44,8 +44,8 @@ class LiveThread(QtCore.QThread):
 
         while self.w.live_running:
             self.oxi.timer = time.time()
-
-            data = self.w.oxi.process_data()
+            self.w.oxi.process_data()
+            '''
             # print("spo2_Data")
             # print(data)
             finger = data[2]
@@ -54,7 +54,6 @@ class LiveThread(QtCore.QThread):
             ppg = data[5]
             localtime = data[1]
 
-            self.oxi.stored_data.append(data)
 
             if finger == 'Y':
                 # The counter > n condition serves to suppress hiccups where
@@ -74,6 +73,10 @@ class LiveThread(QtCore.QThread):
                 self.append_plot_data(localtime, pulse_rate, spo2, ppg)
                 finger_out = False
 
+            if finger_out:
+                self.w.pw.ui.checkDeviceText.setText("手指异常")
+
+        
             if (self.oxi.n_data_points % 31) == 0:
                 start = self.getStartTime()
                 self.w.pw.pulse_curve.setData(self.oxi.pulse_xdata[start: self.oxi.n_data_points],
@@ -82,7 +85,7 @@ class LiveThread(QtCore.QThread):
                 self.w.pw.spo2_curve.setData(self.oxi.spo2_xdata[start: self.oxi.n_data_points],
                                              self.oxi.spo2_ydata[start: self.oxi.n_data_points])
 
-            self.oxi.n_data_points += 1
+            '''
 
     def getStartTime(self, is_csv=False):
         if is_csv:

@@ -19,29 +19,34 @@ class EggThread(QtCore.QThread):
         self.egg.currentdatetime = QtCore.QDateTime.currentDateTime()
         self.egg.starttime = time.time()
 
-        while self.w.live_running:
+        while self.w.egg_running:
             try:
-                self.update_plot()
+                # self.update_plot()
+                self.egg.process_data()
             except Exception as e:
                 print(e)
-                if self.w.live_running:
+                if self.w.egg_running:
                     # print('Something with egg....')
                     self.egg.setup_device(self.w.parameter['egg']['port'], self.w.parameter['egg']['baudrate'])
 
+        # self.egg.sel.close()
+
+    '''
     def update_plot(self):
 
         while self.w.live_running:
             self.egg.process_data()
-            self.egg.n_data_points += 1
+
             self.egg.timer = time.time()
             start = self.getStartTime()
-
+            start_egg = self.getStartTime(self.egg.egg_xdata)
+            print(start_egg)
+           
             self.w.pw.attention_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
                                               self.egg.attention_ydata[start: self.egg.n_data_points])
             self.w.pw.meditation_curve.setData(self.egg.egg_xdata[start: self.egg.n_data_points],
                                                self.egg.meditation_ydata[start: self.egg.n_data_points])
-
-            self.egg.n_data_points += 1  # 仿照oxi_thread修改的
+    
 
     def getStartTime(self, is_csv=False):
         if is_csv:
@@ -56,3 +61,4 @@ class EggThread(QtCore.QThread):
                 self.lastStart = self.egg.egg_xdata[i]
                 return i
         return 0
+'''

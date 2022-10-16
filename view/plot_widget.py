@@ -1,3 +1,8 @@
+import csv
+import datetime
+import os
+import time
+
 import cv2
 import pyqtgraph as pg
 from PyQt5 import uic
@@ -26,14 +31,16 @@ class PlotWidget(QWidget):  # 显示各种结果曲线、拍摄视频的页面
         self.spo2_curve = self.ui.spo2_plot.plot(pen=pg.mkPen('r', width=2))
 
         # 左3，脑电
+        self.ui.egg_plot.addLegend()
         self.attention_curve = self.ui.egg_plot.plot(pen=pg.mkPen('r', width=2), name='attention')
         self.meditation_curve = self.ui.egg_plot.plot(pen=pg.mkPen('g', width=2), name='meditation')
 
-        self.ui.bar_chart.setChart(self.createBarChart())
+        # self.ui.bar_chart.setChart(self.createBarChart())
         # 拍摄视频显示栏
         self.create_video_player()
         # 开启观看视频任务按钮
         self.ui.video_button.clicked.connect(self.openVideoWindow)
+        self.ui.video_button.setEnabled(False)
 
         self.w.statusBar = self.w.statusBar()
         self.w.statusBar.showMessage('状态：未开启')
@@ -97,5 +104,21 @@ class PlotWidget(QWidget):  # 显示各种结果曲线、拍摄视频的页面
         self.ui.vb.addItem(self.img)
 
     def openVideoWindow(self):
+        now = datetime.datetime.now()
+        nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+        nowtimestamp = time.time()
+
+        print("开启视频弹窗")
+        filename = self.w.folder + '/actions.csv'
+        if not os.path.exists(filename):
+            with open(filename, 'w', newline='') as f:
+                datawriter = csv.writer(f, delimiter=',')
+                datawriter.writerow([nowtime, nowtimestamp, '开启视频弹窗'])
+        else:
+            with open(self.w.folder + '/actions.csv', 'a') as f:
+                datawriter = csv.writer(f, delimiter=',')
+                datawriter.writerow([nowtime, nowtimestamp, '开启视频弹窗'])
+
         self.viewlogin = OpenVideo(self.w)
         self.viewlogin.show()
+

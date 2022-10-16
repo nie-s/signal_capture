@@ -17,11 +17,9 @@ class OpenVideo(QWidget, Ui_Form):
     def btnEnterClicked(self):
         print("enter clicked")
         self.viewVideo = VideoPlayer(self.w)
+        # self.w.player = self.viewVideo
         self.viewVideo.play()
         self.viewVideo.showMaximized()
         self.viewVideo.show()
         self.close()
 
-    def btnExitClicked(self):
-        print("Exit clicked")
-        self.close()

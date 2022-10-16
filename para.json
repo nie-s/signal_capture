@@ -1,13 +1,36 @@
 {
-    "spo2":{
-        "port":"COM4",
-        "baudrate":115200
-    },
-    "egg":{
-        "port":"COM3",
-        "baudrate":57600
-    },
-    "camera":{
-        "index":0
-    }
+  "spo2": {
+    "port": "COM3",
+    "baudrate": 115200
+  },
+  "egg": {
+    "port": "COM4",
+    "baudrate": 57600
+  },
+  "camera": {
+    "index": 1
+  },
+  "video_num": 1,
+ "video_info": [
+   {
+     "video": "view/videos/10s静音.mp4",
+     "link": ""
+   },
+   {
+     "video": "xxx",
+     "link": "https://www.wenjuan.com/s/UZBZJvF6E0/"
+   },
+   {
+     "video": "xxx",
+     "link": ""
+   },
+   {
+     "video": "xxx",
+     "link": "https://www.wenjuan.com/s/UZBZJvF6E0/"
+   },
+   {
+     "video": "xxx",
+     "link": ""
+   }
+ ]
 }

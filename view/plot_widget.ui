@@ -73,10 +73,10 @@
   <widget class="GraphicsView" name="vb">
    <property name="geometry">
     <rect>
-     <x>730</x>
-     <y>50</y>
-     <width>671</width>
-     <height>401</height>
+     <x>710</x>
+     <y>140</y>
+     <width>821</width>
+     <height>581</height>
     </rect>
    </property>
    <property name="backgroundBrush">
@@ -100,25 +100,6 @@
    </property>
    <property name="text">
     <string/>
-   </property>
-  </widget>
-  <widget class="QChartView" name="bar_chart">
-   <property name="geometry">
-    <rect>
-     <x>680</x>
-     <y>460</y>
-     <width>811</width>
-     <height>221</height>
-    </rect>
-   </property>
-   <property name="backgroundBrush">
-    <brush brushstyle="NoBrush">
-     <color alpha="0">
-      <red>255</red>
-      <green>255</green>
-      <blue>255</blue>
-     </color>
-    </brush>
    </property>
   </widget>
   <widget class="QPushButton" name="video_button">
@@ -145,11 +126,6 @@
    <class>GraphicsView</class>
    <extends>QGraphicsView</extends>
    <header>pyqtgraph</header>
-  </customwidget>
-  <customwidget>
-   <class>QChartView</class>
-   <extends>QGraphicsView</extends>
-   <header>PyQt5.QtChart</header>
   </customwidget>
  </customwidgets>
  <resources/>

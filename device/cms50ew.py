@@ -2,7 +2,7 @@ import csv
 import datetime
 import time
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import serial
@@ -123,14 +123,12 @@ class CMS50EW():  # 脉搏血氧仪
         nowtimestamp = time.time()
         nowtime = str(now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
 
-
         # Extract the key values from value_list
         finger = value_list[3]
         if finger == b'\xc0':
             finger = 'Y'
         else:
             finger = 'N'
-
 
         strength = int(ord(value_list[4][0:4]) & 0xf)
         pulse_rate = int(ord(value_list[5]) & 0x7f)
@@ -139,10 +137,19 @@ class CMS50EW():  # 脉搏血氧仪
 
         pulse_pd = pd.DataFrame(self.ppg_ydata)
         hrv = self.hrv_Calculator.cal_hrv(pulse_pd, 1, 60)
+        self.n_data_points += 1
 
+        # self.pulse_xdata.append(nowtimestamp - self.starttime)
+        # self.pulse_ydata.append(pulse_rate)
+        # self.spo2_xdata.append(nowtimestamp - self.starttime)
+        # self.spo2_ydata.append(spo2)
+        # self.ppg_ydata.append(ppg)
 
-        return [nowtime, nowtimestamp, finger, pulse_rate, spo2, ppg, strength,
+        data = [nowtime, nowtimestamp, finger, pulse_rate, spo2, ppg, strength,
                 hrv["IBI"], hrv["SDNN"], hrv["SDSD"], hrv["RMSSD"], hrv["pNN20"], hrv["pNN50"]]
+        self.stored_data.append(data)
+
+        return data
 
     def convert_datetime(self):
         """Replaces time deltas with absolute time."""
@@ -196,123 +203,123 @@ class CMS50EW():  # 脉搏血氧仪
         """Closes device socket"""
         self.ser.close()
 
-    def plot_mpl(self, timestamp):
-        """Plots stored session data as Matplotlib plot."""
-
-        hrv = self.hrv_data[-1]
-        sdnn = hrv["SDNN"] / 141 * 50
-        rmssd = hrv["RMSSD"] / 39 * 10
-        pnn20 = hrv["pNN20"] / 34 * 10000
-        pnn50 = hrv["pNN50"] / 16 * 10000
-
-        # hrv["IBI"], hrv["SDNN"], hrv["SDSD"], hrv["RMSSD"], hrv["pNN20"], hrv["pNN50"]])
-        results = [{"SDANN": 100, "RMSSD": 100, "PNN20": 100, "PNN50": 100},
-                   {"SDANN": sdnn, "RMSSD": rmssd, "PNN20": pnn20, "PNN50": pnn50}, ]
-
-        data_length = len(results[0])
-
-        # 将极坐标根据数据长度进行等分
-        angles = np.linspace(0, 2 * np.pi, data_length, endpoint=False)
-        labels = [key for key in results[0].keys()]
-        score = [[v for v in result.values()] for result in results]
-        # 使雷达图数据封闭
-        score_a = np.concatenate((score[0], [score[0][0]]))
-        score_b = np.concatenate((score[1], [score[1][0]]))
-        angles = np.concatenate((angles, [angles[0]]))
-        labels = np.concatenate((labels, [labels[0]]))
-        # 设置图形的大小
-        fig = plt.figure(figsize=(10, 38), dpi=100)
-        # 新建一个子图
-        ax = plt.subplot(4, 1, 1, polar=True)
-        # 绘制雷达图
-        ax.plot(angles, score_a, 'o-', linewidth=2, label='Reference', color='lightskyblue')
-        ax.fill(angles, score_a, alpha=0.25)
-
-        ax.plot(angles, score_b, 'o-', linewidth=2, label='Comparison', color='salmon')
-        ax.fill(angles, score_b, alpha=0.4, color='mistyrose')
-
-        # 设置雷达图中每一项的标签显示
-        ax.set_thetagrids(angles * 180 / np.pi, labels)
-        # 设置雷达图的0度起始位置
-        ax.set_theta_zero_location('N')
-        # 设置雷达图的坐标刻度范围
-        ax.set_rlim(0, 150)
-
-        # 设置雷达图的坐标值显示角度，相对于起始角度的偏移量
-        ax.set_rlabel_position(270)
-        ax.set_title("HRV Parameter Radar Chart\n (Chart values in %, Reference NNI parameters = 100%", fontsize=17)
-        # plt.legend(["Reference", "Comparison"], loc='best')
-        plt.legend(loc='best')
-
-        pulse_plot = plt.subplot(4, 1, 2)
-
-        if self.x_label == 'Time':
-            xvalues = []
-            for value in self.x_values:
-                newdatetime = self.pydatetime + datetime.timedelta(0, value)
-                xvalues.append(time.strftime('%m-%d,%H:%M', newdatetime))
-        else:
-            xvalues = [data[0] for data in self.stored_data]
-
-        ln1 = pulse_plot.plot(xvalues, [data[2] for data in self.stored_data], c='lightcoral', label="pulse")
-        pulse_plot.set_title("Spo2 & HR", fontsize=17)
-        # pulse_plot.set_xlabel(self.x_label, fontsize=24)
-        pulse_plot.set_ylabel('Pulse rate [bpm]', fontsize=14)
-        pulse_plot.set_ylim([40, 220])
-
-        spo2_plot = pulse_plot.twinx()
-        ln2 = spo2_plot.plot(xvalues, [data[3] for data in self.stored_data], color='skyblue', label="spo2")
-        spo2_plot.set_ylabel('SpO2 [%]', fontsize=14)
-        spo2_plot.set_ylim([80, 100])
-
-        # plt.xticks(xvalues[0::100])
-        plt.xticks([])
-        pulse_plot.tick_params(axis='both', labelsize=14)
-        spo2_plot.tick_params(axis='both', labelsize=14)
-
-        lns = ln1 + ln2
-        labs = ["pulse", "spo2"]
-        pulse_plot.legend(lns, labs, loc=0)
-
-        '''
-        plot 3
-        '''
-
-        # xvalues, [data[2] for data in self.stored_data]
-        plt.subplot(4, 1, 3)
-
-        yvalues = [data[2] for data in self.stored_data]
-
-        plt.plot(xvalues, yvalues, ls="dashed", c="gray", lw=0.5)
-        plt.scatter(xvalues, yvalues, c=yvalues, cmap=plt.cm.RdYlGn_r, edgecolor='none', s=40)  # 根据每个点的y值来设置其颜色
-        # 设置图表标题并给坐标轴加上标签
-
-        level1 = max(yvalues) + 3
-        level3 = min(yvalues) - 3
-        level2 = (level1 + level3) / 2
-
-        plt.axhline(y=level1, c="r", lw=1)
-        plt.axhline(y=level2, c="orange", lw=1)
-        plt.axhline(y=level3, c="green", lw=1)
-
-        plt.title("Heart Rate Heat Plot", fontsize=17)
-        plt.ylabel("Heart Rate", fontsize=14)
-        plt.xticks([])
-
-        # 设置刻度标记的大小
-        plt.tick_params(axis='both', which='major', labelsize=14)
-
-        plt.subplot(4, 1, 4)
-
-        peaklist = self.hrv_Calculator.measures['peaklist']
-        ybeat = self.hrv_Calculator.measures['ybeat']
-        plt.title("Heartbeat Plot")
-        plt.plot(self.hrv_Calculator.measures['hart'], alpha=0.5, color='skyblue', label="raw signal")
-        plt.plot(self.hrv_Calculator.measures['hart_rollingmean'], color='yellowgreen', label="moving average")
-        plt.scatter(peaklist, ybeat, color='lightcoral',
-                    label="average: %.1f BPM" % self.hrv_Calculator.measures['bpm'])
-        plt.legend(loc=4, framealpha=0.6)
-
-        filename = "pic/spo2_" + timestamp + ".pdf"
-        plt.savefig(filename)
-        plt.show()
+    # def plot_mpl(self, timestamp):
+    #     """Plots stored session data as Matplotlib plot."""
+    #
+    #     hrv = self.hrv_data[-1]
+    #     sdnn = hrv["SDNN"] / 141 * 50
+    #     rmssd = hrv["RMSSD"] / 39 * 10
+    #     pnn20 = hrv["pNN20"] / 34 * 10000
+    #     pnn50 = hrv["pNN50"] / 16 * 10000
+    #
+    #     # hrv["IBI"], hrv["SDNN"], hrv["SDSD"], hrv["RMSSD"], hrv["pNN20"], hrv["pNN50"]])
+    #     results = [{"SDANN": 100, "RMSSD": 100, "PNN20": 100, "PNN50": 100},
+    #                {"SDANN": sdnn, "RMSSD": rmssd, "PNN20": pnn20, "PNN50": pnn50}, ]
+    #
+    #     data_length = len(results[0])
+    #
+    #     # 将极坐标根据数据长度进行等分
+    #     angles = np.linspace(0, 2 * np.pi, data_length, endpoint=False)
+    #     labels = [key for key in results[0].keys()]
+    #     score = [[v for v in result.values()] for result in results]
+    #     # 使雷达图数据封闭
+    #     score_a = np.concatenate((score[0], [score[0][0]]))
+    #     score_b = np.concatenate((score[1], [score[1][0]]))
+    #     angles = np.concatenate((angles, [angles[0]]))
+    #     labels = np.concatenate((labels, [labels[0]]))
+    #     # 设置图形的大小
+    #     fig = plt.figure(figsize=(10, 38), dpi=100)
+    #     # 新建一个子图
+    #     ax = plt.subplot(4, 1, 1, polar=True)
+    #     # 绘制雷达图
+    #     ax.plot(angles, score_a, 'o-', linewidth=2, label='Reference', color='lightskyblue')
+    #     ax.fill(angles, score_a, alpha=0.25)
+    #
+    #     ax.plot(angles, score_b, 'o-', linewidth=2, label='Comparison', color='salmon')
+    #     ax.fill(angles, score_b, alpha=0.4, color='mistyrose')
+    #
+    #     # 设置雷达图中每一项的标签显示
+    #     ax.set_thetagrids(angles * 180 / np.pi, labels)
+    #     # 设置雷达图的0度起始位置
+    #     ax.set_theta_zero_location('N')
+    #     # 设置雷达图的坐标刻度范围
+    #     ax.set_rlim(0, 150)
+    #
+    #     # 设置雷达图的坐标值显示角度，相对于起始角度的偏移量
+    #     ax.set_rlabel_position(270)
+    #     ax.set_title("HRV Parameter Radar Chart\n (Chart values in %, Reference NNI parameters = 100%", fontsize=17)
+    #     # plt.legend(["Reference", "Comparison"], loc='best')
+    #     plt.legend(loc='best')
+    #
+    #     pulse_plot = plt.subplot(4, 1, 2)
+    #
+    #     if self.x_label == 'Time':
+    #         xvalues = []
+    #         for value in self.x_values:
+    #             newdatetime = self.pydatetime + datetime.timedelta(0, value)
+    #             xvalues.append(time.strftime('%m-%d,%H:%M', newdatetime))
+    #     else:
+    #         xvalues = [data[0] for data in self.stored_data]
+    #
+    #     ln1 = pulse_plot.plot(xvalues, [data[2] for data in self.stored_data], c='lightcoral', label="pulse")
+    #     pulse_plot.set_title("Spo2 & HR", fontsize=17)
+    #     # pulse_plot.set_xlabel(self.x_label, fontsize=24)
+    #     pulse_plot.set_ylabel('Pulse rate [bpm]', fontsize=14)
+    #     pulse_plot.set_ylim([40, 220])
+    #
+    #     spo2_plot = pulse_plot.twinx()
+    #     ln2 = spo2_plot.plot(xvalues, [data[3] for data in self.stored_data], color='skyblue', label="spo2")
+    #     spo2_plot.set_ylabel('SpO2 [%]', fontsize=14)
+    #     spo2_plot.set_ylim([80, 100])
+    #
+    #     # plt.xticks(xvalues[0::100])
+    #     plt.xticks([])
+    #     pulse_plot.tick_params(axis='both', labelsize=14)
+    #     spo2_plot.tick_params(axis='both', labelsize=14)
+    #
+    #     lns = ln1 + ln2
+    #     labs = ["pulse", "spo2"]
+    #     pulse_plot.legend(lns, labs, loc=0)
+    #
+    #     '''
+    #     plot 3
+    #     '''
+    #
+    #     # xvalues, [data[2] for data in self.stored_data]
+    #     plt.subplot(4, 1, 3)
+    #
+    #     yvalues = [data[2] for data in self.stored_data]
+    #
+    #     plt.plot(xvalues, yvalues, ls="dashed", c="gray", lw=0.5)
+    #     plt.scatter(xvalues, yvalues, c=yvalues, cmap=plt.cm.RdYlGn_r, edgecolor='none', s=40)  # 根据每个点的y值来设置其颜色
+    #     # 设置图表标题并给坐标轴加上标签
+    #
+    #     level1 = max(yvalues) + 3
+    #     level3 = min(yvalues) - 3
+    #     level2 = (level1 + level3) / 2
+    #
+    #     plt.axhline(y=level1, c="r", lw=1)
+    #     plt.axhline(y=level2, c="orange", lw=1)
+    #     plt.axhline(y=level3, c="green", lw=1)
+    #
+    #     plt.title("Heart Rate Heat Plot", fontsize=17)
+    #     plt.ylabel("Heart Rate", fontsize=14)
+    #     plt.xticks([])
+    #
+    #     # 设置刻度标记的大小
+    #     plt.tick_params(axis='both', which='major', labelsize=14)
+    #
+    #     plt.subplot(4, 1, 4)
+    #
+    #     peaklist = self.hrv_Calculator.measures['peaklist']
+    #     ybeat = self.hrv_Calculator.measures['ybeat']
+    #     plt.title("Heartbeat Plot")
+    #     plt.plot(self.hrv_Calculator.measures['hart'], alpha=0.5, color='skyblue', label="raw signal")
+    #     plt.plot(self.hrv_Calculator.measures['hart_rollingmean'], color='yellowgreen', label="moving average")
+    #     plt.scatter(peaklist, ybeat, color='lightcoral',
+    #                 label="average: %.1f BPM" % self.hrv_Calculator.measures['bpm'])
+    #     plt.legend(loc=4, framealpha=0.6)
+    #
+    #     filename = "pic/spo2_" + timestamp + ".pdf"
+    #     plt.savefig(filename)
+    #     plt.show()
