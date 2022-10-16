@@ -20,7 +20,7 @@ class VideoPlayer(QWidget):
         super(VideoPlayer, self).__init__(parent)
         self.w = w
         # self.setupUi(self)
-        self.video_count = 0
+        self.stage_count = 0
 
         # 界面
         self.layout1 = QBoxLayout(QBoxLayout.TopToBottom)
@@ -38,7 +38,7 @@ class VideoPlayer(QWidget):
         self.wgt_player.setFullScreen(True)
 
         self.setLayout(self.layout1)
-        # self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)  # 隐藏边框和任务栏
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)  # 隐藏边框和任务栏
         self.showFullScreen()
 
         # self.player.mediaStatusChanged.connect(self.recordEndTime)
@@ -82,23 +82,31 @@ class VideoPlayer(QWidget):
     #     self.timer4.timeout.connect(lambda: self.popQues(4))
 
     def play(self):
-        if (self.player.mediaStatus() != 7) and self.video_count > 0: return
+        if (self.player.mediaStatus() != 7) and self.stage_count > 0: return
 
-        self.timer = QTimer(self)
-        path = self.w.parameter["video_info"][self.video_count]["video"]
-        self.player.setMedia(QMediaContent(QUrl.fromLocalFile(path)))
-        self.player.play()
-        if self.w.parameter["video_info"][self.video_count]["link"] != '':
-            self.timer.start(2000)
-            self.timer.setSingleShot(True)
-            self.timer.timeout.connect(
-                functools.partial(self.popQues, self.w.parameter["video_info"][self.video_count]["link"]))
+        if self.stage_count >= self.w.parameter['stage_num']:
+            self.recordEndTime()
+            return
 
-        if self.video_count < self.w.parameter['video_num'] - 1:
-            self.video_count = self.video_count + 1
+        item = self.w.parameter["video_info"][self.stage_count]
+
+        if "video" in item.keys():
+            path = self.w.parameter["video_info"][self.stage_count]["video"]
+            self.player.setMedia(QMediaContent(QUrl.fromLocalFile(path)))
+            self.player.play()
             self.player.mediaStatusChanged.connect(self.play)
+
+        elif "link" in item.keys():
+            self.popQues(self.w.parameter["video_info"][self.stage_count]["link"])
+            # self.timer.start(2000)
+            # self.timer.setSingleShot(True)
+            # self.timer.timeout.connect(
+            #     functools.partial(self.popQues, self.w.parameter["video_info"][self.video_count]["link"]))
         else:
-            self.player.mediaStatusChanged.connect(self.recordEndTime)
+            raise Exception("wrong json!")
+
+        self.stage_count = self.stage_count + 1
+
 
     # for i in range(1, video_num + 1):
     #     start_time += self.w.parameter["video_info"]["time" + str(i)]
@@ -123,12 +131,11 @@ class VideoPlayer(QWidget):
             datawriter.writerow([nowtime, nowtimestamp, '视频' + str(num) + '开始'])
 
     def recordEndTime(self):
-        self.wgt_player.setFullScreen(False)
-
-        self.endDialog = EndDialog(self.w,self)
-        self.endDialog.exec_()
-
         if self.player.mediaStatus() == 7:
+            self.wgt_player.setFullScreen(False)
+            self.endDialog = EndDialog(self.w, self)
+            self.endDialog.exec_()
+
             print("记录结束时间")
             now = datetime.datetime.now()
             nowtimestamp = time.time()
@@ -143,13 +150,13 @@ class VideoPlayer(QWidget):
     #     self.quesView.show()
     def popQues(self, link):
         self.quesView = Questionnaire(link)
-        self.quesView.showWidget()
+        self.quesView.closeQuesSig.connect(self.play)
+        self.quesView.show()
 
     def closeEvent(self):  # 重写关闭函数
         print("Exit clicked")
         self.player.stop()
         print(self)
-
         self.close()
 
     # def mouseMoveEvent(self): # 重写鼠标移动事件
@@ -158,32 +165,29 @@ class VideoPlayer(QWidget):
 
 # 弹出窗体类
 class Questionnaire(QtWidgets.QWidget):
+    closeQuesSig = pyqtSignal()
+
     def __init__(self, link):
         super(Questionnaire, self).__init__()
 
-        self.ques = QLabel("<a href=\"" + str(link) + "\">请在10s内点击并填写调查问卷")
-        self.ques.setOpenExternalLinks(True)
-
-    def showWidget(self):
         # 设置大小
         self.resize(300, 300)
         # 设置标题
         self.setWindowTitle("调查问卷")
+        self.vbox = QBoxLayout(QBoxLayout.TopToBottom)
+        self.vbox.addStretch(1)
+        self.ques = QLabel("<a href=\"" + str(link) + "\">请在10s内点击并填写调查问卷")
+        self.ques.setOpenExternalLinks(True)
+        self.vbox.addWidget(self.ques)
+        self.vbox.addStretch(1)
+        self.closeButton = QtWidgets.QPushButton(self)
+        self.closeButton.setText('已填完问卷，继续')
+        self.vbox.addWidget(self.closeButton)
+        self.vbox.addStretch(1)
+        self.setLayout(self.vbox)
+        self.closeButton.clicked.connect(self.closeQues)
 
-        # 垂直布局
-        layout = QVBoxLayout()
-
-        layout.addStretch(1)
-
-        # 链接
-        layout.addWidget(self.ques)
-
-        layout.addStretch(1)
-
-        self.setLayout(layout)
-        self.show()
-
-        self.timer = QTimer(self)  # 初始化一个定时器
-        self.timer.timeout.connect(self.close)  # 计时结束调用operate()方法
-        self.timer.setSingleShot(True)
-        self.timer.start(10000)  # 设置计时间隔并启动 10s后关闭窗口
+    def closeQues(self):
+        print("closeQues button clicked!")
+        self.closeQuesSig.emit()
+        self.close()

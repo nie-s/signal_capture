@@ -10,27 +10,22 @@
   "camera": {
     "index": 1
   },
-  "video_num": 1,
- "video_info": [
-   {
-     "video": "view/videos/10s静音.mp4",
-     "link": ""
-   },
-   {
-     "video": "xxx",
-     "link": "https://www.wenjuan.com/s/UZBZJvF6E0/"
-   },
-   {
-     "video": "xxx",
-     "link": ""
-   },
-   {
-     "video": "xxx",
-     "link": "https://www.wenjuan.com/s/UZBZJvF6E0/"
-   },
-   {
-     "video": "xxx",
-     "link": ""
-   }
- ]
+  "stage_num": 3,
+  "video_info": [
+    {
+      "video": "view/videos/10s静音.mp4"
+    },
+    {
+      "link": "https://www.wenjuan.com/s/UZBZJvF6E0/"
+    },
+    {
+      "video": "view/videos/10s静音.mp4"
+    },
+    {
+      "link": "https://www.wenjuan.com/s/UZBZJvF6E0/"
+    },
+    {
+      "video": "xxx"
+    }
+  ]
 }

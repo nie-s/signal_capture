@@ -245,6 +245,7 @@ class DeviceDialog(QDialog):
             "camera": {
                 "index": self.cameraChooseInput.currentIndex(),
             },
+            "stage_info": self.w.parameter["stage_info"],
             "video_info": [
                 # "video": self.videoTextBox.text(),
                 # "num": int(self.videoNumTextBox.text()),
